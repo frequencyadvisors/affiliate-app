@@ -22,7 +22,7 @@ export function AllProgramsGrid({
   };
 
   return (
-    <div className="flex min-h-[959px] w-full flex-col gap-[35px] px-[152px] pt-[74px]">
+    <div className="flex min-h-[959px] w-full flex-col gap-[35px] pt-[74px]">
       <div className="flex h-[79.773px] w-full flex-col gap-2">
         <div className="flex h-[50px] items-center">
           <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[24px] tracking-[-0.2px] text-[#04070f]">All Programs</h1>
@@ -41,7 +41,7 @@ export function AllProgramsGrid({
                 <p className="text-xs font-semibold uppercase tracking-[0.6px] text-[#ff6088]">{p.brandName}</p>
                 <Badge className="h-[25px] px-[10px] py-[5px] text-[12px] font-medium">Active</Badge>
               </div>
-              <h2 className="text-[40px] font-semibold leading-[30px] tracking-[-0.2px] text-[#04070f]">
+              <h2 className="text-[35px] font-semibold leading-[100%] tracking-[-0.2px] text-[#04070f]">
                 {p.programName}
               </h2>
               <p className="text-[14px] leading-[18.2px] text-muted-foreground">
@@ -49,15 +49,21 @@ export function AllProgramsGrid({
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 border-y-2 border-black px-5 py-4">
-              <div>
-                <p className="text-xs">Commission</p>
-                <p className="text-[35px] font-semibold leading-none tracking-[-1.3px]">{p.commissionRate}</p>
+            <div className="flex items-start border-y-2 border-black">
+              <div className="flex min-h-px min-w-px flex-1 flex-col gap-[13px] p-5">
+                <p className="min-w-full text-xs leading-[1.3] text-black">Commission</p>
+                <p className="text-[35px] font-semibold leading-none tracking-[-1.3459px]">{p.commissionRate}</p>
               </div>
-              <div>
-                <p className="text-xs">Commission</p>
-                <p className="text-[35px] font-semibold leading-none tracking-[-1.3px]">{p.cookieWindow.replace(" days", "")}</p>
-                <p className="text-[9px] font-bold uppercase">days</p>
+              <div className="flex min-h-px min-w-px flex-1 self-stretch border-l border-black/20 p-5">
+                <div className="flex w-full flex-col gap-[13px]">
+                  <p className="text-xs leading-[1.3] text-black">Cookie Window</p>
+                  <div className="flex items-end gap-[7px]">
+                    <p className="text-[35px] font-semibold leading-none tracking-[-1.3459px]">{p.cookieWindow.replace(" days", "")}</p>
+                    <span className="flex h-6 w-3 items-center justify-center">
+                      <span className="inline-block rotate-90 whitespace-nowrap text-[9px] font-bold uppercase leading-[1.3] text-black">days</span>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 

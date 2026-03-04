@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, FolderKanban, Grip, LayoutList, PanelLeftClose, Settings, User } from "lucide-react";
+import { Bell, Grip, Rocket, Settings, User } from "lucide-react";
 import { ViewSwitcher } from "@/components/view-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,22 @@ import { DisputeInbox } from "@/components/brand/dispute-inbox";
 import { PublishersList } from "@/components/brand/publishers-list";
 import { CreateProgram, CreateProgramDraft } from "@/components/brand/create-program";
 
-export type BrandScreen = "all-programs" | "program-detail" | "queue" | "disputes" | "dispute-detail" | "publishers" | "detail" | "create-program";
+export type BrandScreen = "all-programs" | "program-detail" | "queue" | "disputes" | "dispute-detail" | "publishers" | "test-flight" | "detail" | "create-program";
+const createProgramIcon = "https://www.figma.com/api/mcp/asset/a076753a-400d-4add-8301-1e6adba64c8a";
+const brandEyeIcon = "https://www.figma.com/api/mcp/asset/05344e1b-ddc1-4efb-a08a-78e83255c98a";
+const brandWordmark = "https://www.figma.com/api/mcp/asset/8e86cb85-e11a-484f-8bf2-1a74b4b4344e";
+const railCollapseIcon = "https://www.figma.com/api/mcp/asset/aedf3b33-11ea-49bb-aff7-d9124e170b71";
+const navAllProgramsIcon = "https://www.figma.com/api/mcp/asset/ae965d9e-7762-404c-9858-ae5b291be3c1";
+const navCommissionsIcon = "https://www.figma.com/api/mcp/asset/1748b546-bc95-4019-bfbb-c8155c8d8527";
+const navDisputesIcon = "https://www.figma.com/api/mcp/asset/ed672f88-c4d0-4048-9ac2-41665cd78124";
+const navCreatorsIcon = "https://www.figma.com/api/mcp/asset/e24860ed-b613-4e9f-a395-828e0029e47b";
 
-function shellButton(active: boolean) {
+function navButton(active: boolean) {
   return [
-    "flex h-[38.852px] w-full items-center gap-2 px-3 text-left text-[16px] leading-[22.857px] tracking-[-0.32px]",
-    active ? "border-l-4 border-black bg-[var(--nav)]" : "opacity-90 hover:bg-[#4fdfff]"
+    "group flex h-10 w-full flex-col items-start overflow-hidden px-[13px] py-[5px] text-left",
+    active
+      ? "border-l-4 border-black bg-[var(--nav)] hover:border-black/30"
+      : "bg-[var(--nav)] hover:bg-[var(--nav)]"
   ].join(" ");
 }
 
@@ -68,34 +78,91 @@ export function BrandShell({
       <aside className="flex h-full w-[226px] shrink-0 flex-col justify-between border-r-2 border-black bg-[var(--nav)]">
         <div className="flex min-h-px min-w-px flex-1 flex-col">
           <div className="flex h-[60px] items-center justify-between border-b-2 border-black px-2">
-            <div className="flex items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-full border-2 border-black bg-[#f0ff4f]">
-                <div className="h-4 w-6 rounded-full bg-black" />
+            <div className="flex h-9 items-center gap-2">
+              <div className="grid h-10 w-10 place-items-center rounded-[211.99px] bg-black">
+                <img src={brandEyeIcon} alt="" aria-hidden className="h-[16.34px] w-[31.052px]" />
               </div>
-              <p className="text-[20px] font-bold tracking-[-0.4px]">FREEQ</p>
+              <img src={brandWordmark} alt="FREEQ" className="h-[21.624px] w-[94.947px]" />
             </div>
-            <PanelLeftClose className="h-5 w-5" />
+            <img src={railCollapseIcon} alt="" aria-hidden className="h-5 w-5" />
           </div>
 
           <div className="flex min-h-px min-w-px flex-1 flex-col items-center justify-between py-[10px]">
-            <Button className="h-10 w-[208px] justify-between text-[16px]" onClick={() => setScreen("create-program")}>
-              Create Program <span aria-hidden>⊕</span>
+            <Button
+              className="h-10 w-[205px] justify-start gap-0 overflow-hidden pl-px pr-0 shadow-[4px_4px_0px_0px_black]"
+              onClick={() => setScreen("create-program")}
+            >
+              <span className="flex min-w-0 flex-1 items-center px-[15px] py-[14px]">
+                <span className="truncate text-[16px] font-semibold leading-none tracking-[-0.16px] text-[#04070f]">
+                  Create Program
+                </span>
+              </span>
+              <span className="flex h-full w-8 shrink-0 items-center justify-center px-[6px] py-[5px]">
+                <img
+                  aria-hidden
+                  alt=""
+                  src={createProgramIcon}
+                  className="h-5 w-5 shrink-0"
+                />
+              </span>
             </Button>
 
-            <nav className="w-full space-y-1 text-sm">
-              <button className={shellButton(screen === "all-programs" || screen === "program-detail")} onClick={() => { setScreen("all-programs"); setActiveProgram("all"); }}>
-                <FolderKanban className="h-5 w-5" />All Programs
+            <nav className="w-full text-sm">
+              <button className={navButton(screen === "all-programs" || screen === "program-detail")} onClick={() => { setScreen("all-programs"); setActiveProgram("all"); }}>
+                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
+                  <span className={["flex shrink-0 p-[5px]", screen === "all-programs" || screen === "program-detail" ? "opacity-100" : "opacity-50"].join(" ")}>
+                    <img src={navAllProgramsIcon} alt="" aria-hidden className="h-5 w-5" />
+                  </span>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "all-programs" || screen === "program-detail" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                    All Programs
+                  </span>
+                </span>
               </button>
-              <button className={shellButton(screen === "queue")} onClick={() => { setScreen("queue"); setActiveProgram("all"); }}>
-                <LayoutList className="h-5 w-5" />All Commissions
+              <button className={navButton(screen === "queue")} onClick={() => { setScreen("queue"); setActiveProgram("all"); }}>
+                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
+                  <span className={["flex shrink-0 p-[5px]", screen === "queue" ? "opacity-100" : "opacity-50"].join(" ")}>
+                    <img src={navCommissionsIcon} alt="" aria-hidden className="h-5 w-5" />
+                  </span>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "queue" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                    Commissions
+                  </span>
+                </span>
               </button>
-              <button className={shellButton(screen === "disputes")} onClick={() => setScreen("disputes")}>Disputes</button>
-              <button className={shellButton(screen === "publishers")} onClick={() => setScreen("publishers")}>Publishers</button>
+              <button className={navButton(screen === "disputes")} onClick={() => setScreen("disputes")}>
+                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
+                  <span className={["flex shrink-0 p-[5px]", screen === "disputes" ? "opacity-100" : "opacity-50"].join(" ")}>
+                    <img src={navDisputesIcon} alt="" aria-hidden className="h-5 w-5" />
+                  </span>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "disputes" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                    Disputes
+                  </span>
+                </span>
+              </button>
+              <button className={navButton(screen === "publishers")} onClick={() => setScreen("publishers")}>
+                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
+                  <span className={["flex shrink-0 p-[5px]", screen === "publishers" ? "opacity-100" : "opacity-50"].join(" ")}>
+                    <img src={navCreatorsIcon} alt="" aria-hidden className="h-5 w-5" />
+                  </span>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "publishers" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                    Creators
+                  </span>
+                </span>
+              </button>
+              <button className={navButton(screen === "test-flight")} onClick={() => setScreen("test-flight")}>
+                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
+                  <span className={["flex shrink-0 p-[5px]", screen === "test-flight" ? "opacity-100" : "opacity-50"].join(" ")}>
+                    <Rocket className="h-5 w-5" />
+                  </span>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "test-flight" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                    Test Flight
+                  </span>
+                </span>
+              </button>
             </nav>
 
             <div className="w-full overflow-y-auto px-2 text-sm">
               <div className="mb-1 px-[9px]">
-                <p className="text-[11px] leading-5 text-black/65">My Programs</p>
+                <p className="text-[11px] leading-5 uppercase tracking-[0.8px] text-black/65">My Programs</p>
               </div>
               {[...Object.keys(BRAND_PROGRAMS_DATA), ...createdPrograms.map((p) => p.programName)].map((program) => {
                 const isDraft = createdPrograms.find((p) => p.programName === program)?.status === "draft";
@@ -106,7 +173,7 @@ export function BrandShell({
                       setActiveProgram(program);
                       setScreen("program-detail");
                     }}
-                    className="mb-1 flex h-9 w-full items-center justify-between rounded-md px-2 text-left hover:bg-[#61e4ff]"
+                    className="mb-1 flex h-9 w-full items-center justify-between rounded-[6px] px-2 text-left transition-colors hover:bg-black/10"
                   >
                     <span className="truncate text-[14px] leading-5">{program}</span>
                     {isDraft && <Badge>Draft</Badge>}
@@ -150,13 +217,19 @@ export function BrandShell({
           </div>
         </header>
         <div className="flex-1 overflow-y-auto">
-          <div className={screen === "all-programs" ? "w-full p-0" : "mx-auto max-w-[1180px] px-8 py-8"}>
+          <div className="mx-auto w-full max-w-[1180px] px-8 py-8">
             {screen === "all-programs" && <AllProgramsGrid onOpenProgram={(p) => { setActiveProgram(p); setScreen("program-detail"); }} onCreateProgram={() => setScreen("create-program")} />}
             {screen === "program-detail" && selectedProgram && "trustSummary" in selectedProgram && <BrandProgramDetail program={selectedProgram as any} onOpenCommission={openCommission} />}
             {screen === "queue" && <CommissionQueue programFilter={activeProgram} onOpenCommission={openCommission} />}
             {screen === "detail" && <CommissionDetailBrand commission={activeCommission} />}
             {screen === "disputes" && <DisputeInbox onOpenCommission={openCommission} />}
             {screen === "publishers" && <PublishersList programFilter={activeProgram} />}
+            {screen === "test-flight" && (
+              <div className="rounded-[20px] border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_black]">
+                <h2 className="text-[24px] font-semibold tracking-[-0.2px] text-[#04070f]">Test Flight</h2>
+                <p className="mt-2 text-[14px] text-muted-foreground">This is a placeholder screen for Test Flight navigation.</p>
+              </div>
+            )}
             {screen === "create-program" && (
               <CreateProgram
                 onSaveDraft={(draft) => {

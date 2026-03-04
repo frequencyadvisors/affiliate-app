@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Compass, DollarSign, Settings, ShieldAlert, Store } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { ViewSwitcher } from "@/components/view-switcher";
-import { COMMISSIONS, CommissionStatus } from "@/lib/mock-data";
+import { COMMISSIONS, CommissionStatus, getAgeDays } from "@/lib/mock-data";
 import { EarningsDashboard } from "@/components/publisher/earnings-dashboard";
 import { CommissionDetail } from "@/components/publisher/commission-detail";
 import { DisputeWizard } from "@/components/publisher/dispute-wizard";
@@ -13,6 +13,14 @@ import { EnrolledProgramDetail } from "@/components/publisher/enrolled-program-d
 import { DiscoverPrograms } from "@/components/publisher/discover-programs";
 import { ProgramDetail } from "@/components/publisher/program-detail";
 import { ProgramJoinConfirmation } from "@/components/publisher/program-join-confirmation";
+const publisherBrandEyeIcon = "https://www.figma.com/api/mcp/asset/6f91606e-cd72-4bdd-8b88-ecec4875ba12";
+const publisherBrandWordmark = "https://www.figma.com/api/mcp/asset/8d6dd311-66e5-425f-9478-ce95181650de";
+const publisherRailCollapseIcon = "https://www.figma.com/api/mcp/asset/1175bfce-0a06-40a7-b6b5-80d771f6fbc8";
+const publisherDiscoverCtaIcon = "https://www.figma.com/api/mcp/asset/14cea5d3-0bd4-42b1-8781-f16e676344c2";
+const publisherNavEarningsIcon = "https://www.figma.com/api/mcp/asset/ef7854bb-df02-4df8-b03f-6c93118449e0";
+const publisherNavMyProgramsIcon = "https://www.figma.com/api/mcp/asset/82c16886-14b5-480d-8a4d-f4fa9b6702a9";
+const publisherNavDisputesIcon = "https://www.figma.com/api/mcp/asset/b124d3fd-b7f4-41ba-9b8b-7015c7571196";
+const publisherSettingsIcon = "https://www.figma.com/api/mcp/asset/1c17d56c-afd4-4a4c-a042-3ee5f57eb528";
 
 export type PublisherScreen =
   | "earnings"
@@ -26,10 +34,12 @@ export type PublisherScreen =
   | "program-joined"
   | "enrolled-program-detail";
 
-function shellButton(active: boolean) {
+function navButton(active: boolean) {
   return [
-    "flex w-full items-center gap-2 px-3 py-2 text-left text-[16px] tracking-[-0.32px]",
-    active ? "border-l-[3px] border-black bg-[var(--nav)]" : "opacity-90 hover:bg-[#4fdfff]"
+    "group flex h-10 w-full flex-col items-start overflow-hidden px-[13px] py-[5px] text-left",
+    active
+      ? "border-l-4 border-black bg-[var(--nav)] hover:border-black/30"
+      : "bg-[var(--nav)] hover:bg-[var(--nav)]"
   ].join(" ");
 }
 
@@ -46,12 +56,14 @@ export function PublisherShell({
   const [activeCommissionId, setActiveCommissionId] = useState("COM-1004");
   const [activeProgram, setActiveProgram] = useState("Chocolate Bar Drop Vol. 3");
   const [tab, setTab] = useState<"all" | CommissionStatus>("all");
+  const pinnedPrograms = ["Chocolate Bar Drop Vol. 3", "Creator Collab Series", "Back to School Bundle"];
 
   useEffect(() => {
     if (initialScreen) setScreen(initialScreen);
   }, [initialScreen]);
 
   const commission = COMMISSIONS.find((c) => c.id === activeCommissionId) || COMMISSIONS[0];
+  const stalePending = COMMISSIONS.some((c) => c.status === "pending" && getAgeDays(c.conversionTimestamp) > c.validationWindowDays);
 
   const crumbs = useMemo(() => {
     const list = [{ label: "Mr. Beast", onClick: () => setScreen("earnings") }];
@@ -64,22 +76,91 @@ export function PublisherShell({
   return (
     <div className="flex h-screen overflow-hidden">
       <aside className="flex w-[226px] shrink-0 flex-col justify-between border-r-2 border-black bg-[var(--nav)]">
-        <div>
+        <div className="flex min-h-px min-w-px flex-1 flex-col">
           <div className="flex h-[60px] items-center justify-between border-b-2 border-black px-2">
-            <p className="text-lg font-bold">FREEQ</p>
+            <div className="flex h-9 items-center gap-2">
+              <div className="grid h-10 w-10 place-items-center rounded-[211.99px] bg-black">
+                <img src={publisherBrandEyeIcon} alt="" aria-hidden className="h-[16.34px] w-[31.052px]" />
+              </div>
+              <img src={publisherBrandWordmark} alt="FREEQ" className="h-[21.624px] w-[94.947px]" />
+            </div>
+            <img src={publisherRailCollapseIcon} alt="" aria-hidden className="h-5 w-5" />
           </div>
 
-          <nav className="mt-8 space-y-1 text-sm">
-            <button className={shellButton(screen === "earnings" || screen === "detail")} onClick={() => setScreen("earnings")}><DollarSign className="h-4 w-4" />Earnings</button>
-            <button className={shellButton(screen === "my-programs" || screen === "enrolled-program-detail")} onClick={() => setScreen("my-programs")}><Store className="h-4 w-4" />My Programs</button>
-            <button className={shellButton(screen === "disputes" || screen === "dispute-wizard")} onClick={() => setScreen("disputes")}><ShieldAlert className="h-4 w-4" />Disputes</button>
-            <button className={shellButton(screen === "discover" || screen === "program-detail" || screen === "program-joined")} onClick={() => setScreen("discover")}><Compass className="h-4 w-4" />Discover</button>
-          </nav>
+          <div className="flex min-h-px min-w-px flex-1 flex-col items-center justify-between py-[10px]">
+            <button
+              className="flex h-10 w-[205px] items-center gap-0 overflow-hidden rounded-[11px] border-2 border-black bg-primary pl-px pr-0 text-left shadow-[4px_4px_0px_0px_black] hover:brightness-105"
+              onClick={() => setScreen("discover")}
+            >
+              <span className="flex min-w-0 flex-1 items-center px-[15px] py-[14px]">
+                <span className="truncate text-[16px] font-semibold leading-none tracking-[-0.16px] text-[#04070f]">
+                  Discover Programs
+                </span>
+              </span>
+              <span className="flex h-full w-8 shrink-0 items-center justify-center px-[6px] py-[5px]">
+                <img aria-hidden alt="" src={publisherDiscoverCtaIcon} className="h-5 w-5 shrink-0" />
+              </span>
+            </button>
+
+            <nav className="w-full text-sm">
+              <button className={navButton(screen === "earnings" || screen === "detail")} onClick={() => setScreen("earnings")}>
+                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
+                  <span className={["flex shrink-0 p-[5px]", screen === "earnings" || screen === "detail" ? "opacity-100" : "opacity-50"].join(" ")}>
+                    <img src={publisherNavEarningsIcon} alt="" aria-hidden className="h-5 w-5" />
+                  </span>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "earnings" || screen === "detail" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                    Earnings
+                  </span>
+                </span>
+              </button>
+              <button className={navButton(screen === "my-programs" || screen === "enrolled-program-detail")} onClick={() => setScreen("my-programs")}>
+                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
+                  <span className={["flex shrink-0 p-[5px]", screen === "my-programs" || screen === "enrolled-program-detail" ? "opacity-100" : "opacity-50"].join(" ")}>
+                    <img src={publisherNavMyProgramsIcon} alt="" aria-hidden className="h-5 w-5" />
+                  </span>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "my-programs" || screen === "enrolled-program-detail" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                    My Programs
+                  </span>
+                </span>
+              </button>
+              <button className={navButton(screen === "disputes" || screen === "dispute-wizard")} onClick={() => setScreen("disputes")}>
+                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
+                  <span className={["flex shrink-0 p-[5px]", screen === "disputes" || screen === "dispute-wizard" ? "opacity-100" : "opacity-50"].join(" ")}>
+                    <img src={publisherNavDisputesIcon} alt="" aria-hidden className="h-5 w-5" />
+                  </span>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "disputes" || screen === "dispute-wizard" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                    Disputes
+                  </span>
+                </span>
+              </button>
+            </nav>
+
+            <div className="w-full overflow-y-auto px-2 text-sm">
+              <div className="mb-1 px-[9px]">
+                <p className="text-[11px] leading-5 uppercase tracking-[0.8px] text-black/65">My Programs</p>
+              </div>
+              {pinnedPrograms.map((program) => (
+                <button
+                  key={program}
+                  onClick={() => {
+                    setActiveProgram(program);
+                    setScreen("enrolled-program-detail");
+                  }}
+                  className="mb-1 flex h-9 w-full items-center rounded-[6px] px-2 text-left transition-colors hover:bg-black/10"
+                >
+                  <span className="truncate text-[14px] leading-5">{program}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-3 border-t-2 border-black p-3">
+        <div className="h-[138px] space-y-3 border-t-2 border-black px-3 pt-[14px]">
           <ViewSwitcher viewMode={viewMode} onChange={(v) => { setViewMode(v); setScreen("earnings"); }} />
-          <button className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-[#61e4ff]"><Settings className="h-4 w-4" />Settings</button>
+          <button className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-[#61e4ff]">
+            <img src={publisherSettingsIcon} alt="" aria-hidden className="h-4 w-4" />
+            Settings
+          </button>
         </div>
       </aside>
 
@@ -92,6 +173,12 @@ export function PublisherShell({
             </div>
           ))}
         </header>
+        {screen === "earnings" && stalePending && (
+          <div className="flex h-[46px] w-full items-center gap-2 border-b-2 border-black bg-status-pending-bg px-[13px] text-sm text-[#04070f]">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>Pending Health Alert: at least one commission is past validation window.</span>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-[1180px] px-8 py-8">

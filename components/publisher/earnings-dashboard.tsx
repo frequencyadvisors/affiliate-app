@@ -1,6 +1,5 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { COMMISSIONS, CommissionStatus, formatCurrency, formatDateTime, getAgeDays } from "@/lib/mock-data";
 import { CommissionStatusChip } from "@/components/commission-status-chip";
@@ -30,8 +29,6 @@ export function EarningsDashboard({
   const rows = tab === "all" ? COMMISSIONS : COMMISSIONS.filter((c) => c.status === tab);
   const total = COMMISSIONS.filter((c) => ["paid", "locked", "approved"].includes(c.status)).reduce((a, c) => a + c.amount, 0);
   const pending = COMMISSIONS.filter((c) => ["pending", "recorded"].includes(c.status)).reduce((a, c) => a + c.amount, 0);
-  const stalePending = COMMISSIONS.some((c) => c.status === "pending" && getAgeDays(c.conversionTimestamp) > c.validationWindowDays);
-
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-4">
@@ -40,13 +37,6 @@ export function EarningsDashboard({
         <Stat title="Conversion Rate" value="6.4%" />
         <Stat title="Active Programs" value="3" />
       </div>
-
-      {stalePending && (
-        <div className="rounded-md border border-status-pending bg-status-pending-bg p-3 text-sm text-status-pending">
-          <AlertTriangle className="mr-2 inline h-4 w-4" />
-          Pending Health Alert: at least one commission is past validation window.
-        </div>
-      )}
 
       <Card>
         <CardHeader><CardTitle className="text-base">Earnings Trend</CardTitle></CardHeader>
