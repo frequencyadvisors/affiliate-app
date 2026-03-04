@@ -15,7 +15,7 @@ export function ViewSwitcher({
       <select
         value={viewMode}
         onChange={(e) => onChange(e.target.value as "publisher" | "brand")}
-        className="h-9 w-full rounded-md border bg-card px-3 text-sm text-foreground"
+        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
       >
         <option value="publisher">Publisher View</option>
         <option value="brand">Brand View</option>
