@@ -1,9 +1,7 @@
 "use client";
 
-import { Sprout } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BRAND_PROGRAMS_DATA } from "@/lib/mock-data";
 
 export function AllProgramsGrid({
@@ -14,42 +12,99 @@ export function AllProgramsGrid({
   onCreateProgram: () => void;
 }) {
   const programs = Object.values(BRAND_PROGRAMS_DATA);
+  const summaries: Record<string, string> = {
+    "Chocolate Bar Drop Vol. 3": "Limited-run chocolate bar collection including new MrBeast Bar flavors. High conversion, impulse-buy price point.",
+    "Creator Collab Series": "Affiliate program for creator-native partnerships driving Feastables multipack and bundle sales across YouTube and TikTok audiences.",
+    "Back to School Bundle": "Seasonal bundle program targeting high-volume snack purchases for the back-to-school period. Limited enrollment."
+  };
+  const reversalLabel: Record<string, string> = {
+    "Back to School Bundle": "Optional"
+  };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">All Programs</h1>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="flex min-h-[959px] w-full flex-col gap-[35px] px-[152px] pt-[74px]">
+      <div className="flex h-[79.773px] w-full flex-col gap-2">
+        <div className="flex h-[50px] items-center">
+          <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[24px] tracking-[-0.2px] text-[#04070f]">All Programs</h1>
+        </div>
+        <p className="text-[16px] text-muted-foreground">All affiliate programs created by your organisation.</p>
+      </div>
+
+      <div className="grid items-start gap-4 lg:grid-cols-3">
         {programs.map((p) => (
-          <Card key={p.programName} className="cursor-pointer hover:bg-muted/30" onClick={() => onOpenProgram(p.programName)}>
-            <CardHeader>
-              <CardTitle className="text-base">{p.programName}</CardTitle>
-              <CardDescription>{p.brandName}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Badge variant="secondary">Snack & CPG</Badge>
-              <p className="text-sm text-muted-foreground">Performance-ready affiliate program with clear reversal governance.</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div><p className="text-muted-foreground">Commission</p><p className="font-medium">{p.commissionRate}</p></div>
-                <div><p className="text-muted-foreground">Cookie</p><p className="font-medium">{p.cookieWindow}</p></div>
-                <div><p className="text-muted-foreground">Approval</p><p className="font-medium">{p.trustSummary.approvalRate}</p></div>
-                <div><p className="text-muted-foreground">Avg Payout</p><p className="font-medium">{p.trustSummary.avgPayout}</p></div>
+          <article
+            key={p.programName}
+            className="flex h-[460px] max-h-[460px] w-full min-w-0 flex-col overflow-hidden rounded-[20px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_black]"
+          >
+            <div className="flex min-h-px min-w-0 flex-1 flex-col gap-[15px] px-5 pt-5">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.6px] text-[#ff6088]">{p.brandName}</p>
+                <Badge className="h-[25px] px-[10px] py-[5px] text-[12px] font-medium">Active</Badge>
               </div>
-            </CardContent>
-          </Card>
+              <h2 className="text-[40px] font-semibold leading-[30px] tracking-[-0.2px] text-[#04070f]">
+                {p.programName}
+              </h2>
+              <p className="text-[14px] leading-[18.2px] text-muted-foreground">
+                {summaries[p.programName] || "Performance-ready affiliate program with transparent governance and reliable payout behavior."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-y-2 border-black px-5 py-4">
+              <div>
+                <p className="text-xs">Commission</p>
+                <p className="text-[35px] font-semibold leading-none tracking-[-1.3px]">{p.commissionRate}</p>
+              </div>
+              <div>
+                <p className="text-xs">Commission</p>
+                <p className="text-[35px] font-semibold leading-none tracking-[-1.3px]">{p.cookieWindow.replace(" days", "")}</p>
+                <p className="text-[9px] font-bold uppercase">days</p>
+              </div>
+            </div>
+
+            <div className="flex h-[62px] items-center justify-between border-b-2 border-black bg-[var(--muted)] px-[18px] pb-[2px] text-[12px]">
+              <div>
+                <p className="opacity-50">Approval</p>
+                <p className="font-semibold">{p.trustSummary.approvalRate}</p>
+              </div>
+              <div>
+                <p className="opacity-50">Avg. Payout</p>
+                <p className="font-semibold">11 days</p>
+              </div>
+              <div>
+                <p className="opacity-50">Reversals</p>
+                <p className="font-semibold whitespace-nowrap">
+                  <span className="mr-1 inline-block h-[6px] w-[6px] rounded-full bg-[#37dcff]" />
+                  {reversalLabel[p.programName] || "Always"}
+                </p>
+              </div>
+              <div>
+                <p className="opacity-50">Creators</p>
+                <p className="font-semibold">{p.trustSummary.activePublishers}</p>
+              </div>
+            </div>
+
+            <button
+              className="flex h-[44px] w-full items-center justify-center gap-2 bg-primary px-[111px] py-[7px] text-[20px] font-semibold leading-[30px] tracking-[-0.2px] text-[#04070f] hover:brightness-105"
+              onClick={() => onOpenProgram(p.programName)}
+            >
+              <span className="whitespace-nowrap">View Program</span>
+              <span aria-hidden className="relative top-[-0.5px]">›</span>
+            </button>
+          </article>
         ))}
       </div>
-      {programs.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-14 text-center">
-            <Sprout className="h-8 w-8 text-muted-foreground" />
-            <div>
-              <h3 className="font-semibold">No programs yet</h3>
-              <p className="text-sm text-muted-foreground">Create your first program to start onboarding publishers.</p>
-            </div>
-            <Button onClick={onCreateProgram}>Create your first program</Button>
-          </CardContent>
-        </Card>
-      )}
+
+      <div className="flex h-[134.398px] items-center justify-center rounded-[20px] border-2 border-black bg-[var(--lime)] px-8 py-[2px]">
+        <button className="flex h-[50.398px] items-center gap-4" onClick={onCreateProgram}>
+          <span className="flex h-[50px] w-[50px] items-center justify-center rounded-[14px] border-[3px] border-black bg-primary shadow-[3px_3px_0px_0px_black]">
+            <PlusCircle className="h-6 w-6" />
+          </span>
+          <span className="text-left">
+            <span className="block text-[26.4px] font-semibold leading-none tracking-[-0.88px]">Create new programs to grow your network</span>
+            <span className="text-base text-muted-foreground">Use the left rail to create and manage affiliate programs.</span>
+          </span>
+        </button>
+      </div>
     </div>
   );
 }
