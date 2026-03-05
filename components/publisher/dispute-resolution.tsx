@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function DisputeResolution() {
+export function DisputeResolution({ showListHeader = true }: { showListHeader?: boolean }) {
   const [active, setActive] = useState<Dispute | null>(null);
 
   if (active) {
@@ -33,8 +33,8 @@ export function DisputeResolution() {
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Dispute Resolution</CardTitle></CardHeader>
-      <CardContent className="space-y-2">
+      {showListHeader && <CardHeader><CardTitle className="text-base">Dispute Resolution</CardTitle></CardHeader>}
+      <CardContent className={showListHeader ? "space-y-2" : "space-y-2 pt-6"}>
         {DISPUTES.map((d) => {
           const urgency = getDisputeUrgency(d);
           return (

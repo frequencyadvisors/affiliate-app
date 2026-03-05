@@ -4,7 +4,13 @@ import { COMMISSIONS, formatCurrency } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export function PublishersList({ programFilter = "all" }: { programFilter?: "all" | string }) {
+export function PublishersList({
+  programFilter = "all",
+  showHeader = true
+}: {
+  programFilter?: "all" | string;
+  showHeader?: boolean;
+}) {
   const filtered = programFilter === "all" ? COMMISSIONS : COMMISSIONS.filter((c) => c.programName === programFilter);
   const grouped = Object.values(
     filtered.reduce<Record<string, { name: string; total: number; conversions: number; approved: number }>>((acc, c) => {
@@ -18,8 +24,8 @@ export function PublishersList({ programFilter = "all" }: { programFilter?: "all
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Publishers</CardTitle></CardHeader>
-      <CardContent>
+      {showHeader && <CardHeader><CardTitle className="text-base">Publishers</CardTitle></CardHeader>}
+      <CardContent className={showHeader ? undefined : "pt-6"}>
         <Table>
           <TableHeader>
             <TableRow>

@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
-export function DisputeInbox({ onOpenCommission }: { onOpenCommission: (id: string) => void }) {
+export function DisputeInbox({
+  onOpenCommission,
+  showListHeader = true
+}: {
+  onOpenCommission: (id: string) => void;
+  showListHeader?: boolean;
+}) {
   const [active, setActive] = useState<Dispute | null>(null);
 
   if (active) {
@@ -41,8 +47,8 @@ export function DisputeInbox({ onOpenCommission }: { onOpenCommission: (id: stri
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Dispute Inbox</CardTitle></CardHeader>
-      <CardContent className="space-y-2">
+      {showListHeader && <CardHeader><CardTitle className="text-base">Dispute Inbox</CardTitle></CardHeader>}
+      <CardContent className={showListHeader ? "space-y-2" : "space-y-2 pt-6"}>
         {DISPUTES.map((d) => {
           const urgency = getDisputeUrgency(d);
           return (

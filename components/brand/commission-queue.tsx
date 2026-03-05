@@ -14,10 +14,12 @@ import { CommissionStatusChip } from "@/components/commission-status-chip";
 
 export function CommissionQueue({
   programFilter = "all",
-  onOpenCommission
+  onOpenCommission,
+  showHeader = true
 }: {
   programFilter?: "all" | string;
   onOpenCommission: (id: string) => void;
+  showHeader?: boolean;
 }) {
   const rows = useMemo(() => {
     const base = getPendingCommissions();
@@ -36,13 +38,15 @@ export function CommissionQueue({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between text-base">
-          <span>Commission Queue</span>
-          <span className="text-sm font-normal text-muted-foreground">{rows.length} pending • {formatCurrency(total, "USD")}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+      {showHeader && (
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between text-base">
+            <span>Commission Queue</span>
+            <span className="text-sm font-normal text-muted-foreground">{rows.length} pending • {formatCurrency(total, "USD")}</span>
+          </CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className={showHeader ? undefined : "pt-6"}>
         {selected.length > 0 && (
           <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2">
             <span className="text-xs text-muted-foreground">{selected.length} selected</span>

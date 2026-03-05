@@ -12,12 +12,29 @@ export function TabsList({ className, children }: React.HTMLAttributes<HTMLDivEl
   return <div className={cn("inline-flex h-9 items-center rounded-md bg-muted p-1", className)}>{children}</div>;
 }
 
-export function TabsTrigger({ value, children }: { value: string; children: React.ReactNode }) {
+export function TabsTrigger({
+  value,
+  children,
+  className,
+  activeClassName,
+  inactiveClassName
+}: {
+  value: string;
+  children: React.ReactNode;
+  className?: string;
+  activeClassName?: string;
+  inactiveClassName?: string;
+}) {
   const ctx = React.useContext(Ctx)!;
+  const isActive = ctx.value === value;
   return (
     <button
       onClick={() => ctx.setValue(value)}
-      className={cn("inline-flex items-center rounded-sm px-3 py-1 text-sm", ctx.value === value && "bg-card shadow-sm")}
+      className={cn(
+        "inline-flex items-center rounded-sm px-3 py-1 text-sm",
+        className,
+        isActive ? (activeClassName || "bg-card shadow-sm") : inactiveClassName
+      )}
     >
       {children}
     </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Bell, Grip, User } from "lucide-react";
 import { ViewSwitcher } from "@/components/view-switcher";
 import { COMMISSIONS, CommissionStatus, getAgeDays } from "@/lib/mock-data";
 import { EarningsDashboard } from "@/components/publisher/earnings-dashboard";
@@ -56,7 +56,6 @@ export function PublisherShell({
   const [activeCommissionId, setActiveCommissionId] = useState("COM-1004");
   const [activeProgram, setActiveProgram] = useState("Chocolate Bar Drop Vol. 3");
   const [tab, setTab] = useState<"all" | CommissionStatus>("all");
-  const pinnedPrograms = ["Chocolate Bar Drop Vol. 3", "Creator Collab Series", "Back to School Bundle"];
 
   useEffect(() => {
     if (initialScreen) setScreen(initialScreen);
@@ -72,6 +71,36 @@ export function PublisherShell({
     if (screen === "disputes") list.push({ label: "Disputes", onClick: () => setScreen("disputes") });
     return list;
   }, [screen, activeCommissionId, activeProgram]);
+
+  function screenIntro() {
+    if (screen === "earnings") {
+      return {
+        title: "Earnings",
+        subtitle: "Track commission performance, payout status, and trend movement."
+      };
+    }
+    if (screen === "my-programs") {
+      return {
+        title: "My Programs",
+        subtitle: "Review your active partnerships, performance, and program health."
+      };
+    }
+    if (screen === "disputes") {
+      return {
+        title: "Disputes",
+        subtitle: "Manage open cases, resolution status, and response timelines."
+      };
+    }
+    if (screen === "discover") {
+      return {
+        title: "Discover Programs",
+        subtitle: "Explore new partnerships with clear terms and payout expectations."
+      };
+    }
+    return null;
+  }
+
+  const intro = screenIntro();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -135,43 +164,37 @@ export function PublisherShell({
               </button>
             </nav>
 
-            <div className="w-full overflow-y-auto px-2 text-sm">
-              <div className="mb-1 px-[9px]">
-                <p className="text-[11px] leading-5 uppercase tracking-[0.8px] text-black/65">My Programs</p>
-              </div>
-              {pinnedPrograms.map((program) => (
-                <button
-                  key={program}
-                  onClick={() => {
-                    setActiveProgram(program);
-                    setScreen("enrolled-program-detail");
-                  }}
-                  className="mb-1 flex h-9 w-full items-center rounded-[6px] px-2 text-left transition-colors hover:bg-black/10"
-                >
-                  <span className="truncate text-[14px] leading-5">{program}</span>
-                </button>
-              ))}
-            </div>
+            <div className="w-full" />
           </div>
         </div>
 
         <div className="h-[138px] space-y-3 border-t-2 border-black px-3 pt-[14px]">
-          <ViewSwitcher viewMode={viewMode} onChange={(v) => { setViewMode(v); setScreen("earnings"); }} />
           <button className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-[#61e4ff]">
             <img src={publisherSettingsIcon} alt="" aria-hidden className="h-4 w-4" />
             Settings
           </button>
+          <ViewSwitcher viewMode={viewMode} onChange={(v) => { setViewMode(v); setScreen("earnings"); }} />
         </div>
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col bg-[var(--background)]">
-        <header className="flex h-[60px] shrink-0 items-center gap-2 border-b-2 border-black bg-[var(--background)] px-6 text-sm">
-          {crumbs.map((c, i) => (
-            <div key={c.label} className="flex items-center gap-2">
-              <button onClick={c.onClick} className="hover:underline">{c.label}</button>
-              {i < crumbs.length - 1 && <span className="opacity-30">/</span>}
-            </div>
-          ))}
+        <header className="flex h-[60px] shrink-0 items-center justify-between gap-2 border-b-2 border-black bg-[var(--background)] px-6 text-sm">
+          <div className="flex items-center gap-2 text-[15px]">
+            {crumbs.map((c, i) => (
+              <div key={c.label} className="flex items-center gap-2">
+                <button onClick={c.onClick} className="hover:underline">{c.label}</button>
+                {i < crumbs.length - 1 && <span className="opacity-30">/</span>}
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full border-2 border-[var(--background)] bg-[#ff82e6] text-[11px] font-semibold">11</span>
+            </button>
+            <User className="h-5 w-5" />
+            <Grip className="h-5 w-5" />
+          </div>
         </header>
         {screen === "earnings" && stalePending && (
           <div className="flex h-[46px] w-full items-center gap-2 border-b-2 border-black bg-status-pending-bg px-[13px] text-sm text-[#04070f]">
@@ -181,11 +204,21 @@ export function PublisherShell({
         )}
 
         <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[1180px] px-8 py-8">
+          <div className={screen === "enrolled-program-detail" ? "w-full" : "mx-auto w-full max-w-[1180px] px-8 py-8"}>
+            {intro && (
+              <div className="mb-[35px] flex h-[79.773px] w-full flex-col gap-2">
+                <div className="flex h-[50px] items-center">
+                  <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[24px] tracking-[-0.2px] text-[#04070f]">
+                    {intro.title}
+                  </h1>
+                </div>
+                <p className="text-[16px] text-muted-foreground">{intro.subtitle}</p>
+              </div>
+            )}
             {screen === "earnings" && <EarningsDashboard tab={tab} onTab={setTab} onOpenCommission={(id) => { setActiveCommissionId(id); setScreen("detail"); }} />}
             {screen === "detail" && <CommissionDetail commission={commission} onDispute={(id) => { setActiveCommissionId(id); setScreen("dispute-wizard"); }} />}
             {screen === "dispute-wizard" && <DisputeWizard commissionId={activeCommissionId} onSubmit={() => setScreen("disputes")} />}
-            {screen === "disputes" && <DisputeResolution />}
+            {screen === "disputes" && <DisputeResolution showListHeader={false} />}
             {screen === "my-programs" && <MyPrograms onOpenProgram={(name) => { setActiveProgram(name); setScreen("enrolled-program-detail"); }} onDiscover={() => setScreen("discover")} />}
             {screen === "enrolled-program-detail" && <EnrolledProgramDetail programName={activeProgram} onOpenCommission={(id) => { setActiveCommissionId(id); setScreen("detail"); }} />}
             {screen === "discover" && <DiscoverPrograms onOpenProgram={(name) => { setActiveProgram(name); setScreen("program-detail"); }} />}

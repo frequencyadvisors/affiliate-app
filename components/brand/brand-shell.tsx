@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Grip, Rocket, Settings, User } from "lucide-react";
 import { ViewSwitcher } from "@/components/view-switcher";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BRAND_PROGRAMS_DATA, COMMISSIONS } from "@/lib/mock-data";
 import { AllProgramsGrid } from "@/components/brand/all-programs-grid";
@@ -22,7 +21,6 @@ const railCollapseIcon = "https://www.figma.com/api/mcp/asset/aedf3b33-11ea-49bb
 const navAllProgramsIcon = "https://www.figma.com/api/mcp/asset/ae965d9e-7762-404c-9858-ae5b291be3c1";
 const navCommissionsIcon = "https://www.figma.com/api/mcp/asset/1748b546-bc95-4019-bfbb-c8155c8d8527";
 const navDisputesIcon = "https://www.figma.com/api/mcp/asset/ed672f88-c4d0-4048-9ac2-41665cd78124";
-const navCreatorsIcon = "https://www.figma.com/api/mcp/asset/e24860ed-b613-4e9f-a395-828e0029e47b";
 
 function navButton(active: boolean) {
   return [
@@ -72,6 +70,36 @@ export function BrandShell({
     setActiveCommissionId(id);
     setScreen("detail");
   }
+
+  function screenIntro() {
+    if (screen === "queue") {
+      return {
+        title: "Commissions",
+        subtitle: "Review pending conversions, risks, and status updates across all programs."
+      };
+    }
+    if (screen === "disputes") {
+      return {
+        title: "Disputes",
+        subtitle: "Track open cases, response quality, and resolution urgency."
+      };
+    }
+    if (screen === "publishers") {
+      return {
+        title: "Creators",
+        subtitle: "Monitor creator performance, conversion volume, and approval rates."
+      };
+    }
+    if (screen === "test-flight") {
+      return {
+        title: "Test Flight",
+        subtitle: "Run experiments and validate workflows before wider rollout."
+      };
+    }
+    return null;
+  }
+
+  const intro = screenIntro();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -138,16 +166,6 @@ export function BrandShell({
                   </span>
                 </span>
               </button>
-              <button className={navButton(screen === "publishers")} onClick={() => setScreen("publishers")}>
-                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
-                  <span className={["flex shrink-0 p-[5px]", screen === "publishers" ? "opacity-100" : "opacity-50"].join(" ")}>
-                    <img src={navCreatorsIcon} alt="" aria-hidden className="h-5 w-5" />
-                  </span>
-                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "publishers" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
-                    Creators
-                  </span>
-                </span>
-              </button>
               <button className={navButton(screen === "test-flight")} onClick={() => setScreen("test-flight")}>
                 <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
                   <span className={["flex shrink-0 p-[5px]", screen === "test-flight" ? "opacity-100" : "opacity-50"].join(" ")}>
@@ -160,31 +178,12 @@ export function BrandShell({
               </button>
             </nav>
 
-            <div className="w-full overflow-y-auto px-2 text-sm">
-              <div className="mb-1 px-[9px]">
-                <p className="text-[11px] leading-5 uppercase tracking-[0.8px] text-black/65">My Programs</p>
-              </div>
-              {[...Object.keys(BRAND_PROGRAMS_DATA), ...createdPrograms.map((p) => p.programName)].map((program) => {
-                const isDraft = createdPrograms.find((p) => p.programName === program)?.status === "draft";
-                return (
-                  <button
-                    key={program}
-                    onClick={() => {
-                      setActiveProgram(program);
-                      setScreen("program-detail");
-                    }}
-                    className="mb-1 flex h-9 w-full items-center justify-between rounded-[6px] px-2 text-left transition-colors hover:bg-black/10"
-                  >
-                    <span className="truncate text-[14px] leading-5">{program}</span>
-                    {isDraft && <Badge>Draft</Badge>}
-                  </button>
-                );
-              })}
-            </div>
+            <div className="w-full" />
           </div>
         </div>
 
         <div className="h-[138px] space-y-3 border-t-2 border-black px-3 pt-[14px]">
+          <button className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-[#61e4ff]"><Settings className="h-4 w-4" />Settings</button>
           <ViewSwitcher
             viewMode={viewMode}
             onChange={(v) => {
@@ -193,7 +192,6 @@ export function BrandShell({
               setActiveProgram("all");
             }}
           />
-          <button className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-[#61e4ff]"><Settings className="h-4 w-4" />Settings</button>
         </div>
       </aside>
 
@@ -217,16 +215,25 @@ export function BrandShell({
           </div>
         </header>
         <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[1180px] px-8 py-8">
+          <div className={screen === "program-detail" || screen === "all-programs" ? "w-full" : "mx-auto w-full max-w-[1180px] px-8 py-8"}>
+            {intro && (
+              <div className="mb-[35px] flex h-[79.773px] w-full flex-col gap-2">
+                <div className="flex h-[50px] items-center">
+                  <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[24px] tracking-[-0.2px] text-[#04070f]">
+                    {intro.title}
+                  </h1>
+                </div>
+                <p className="text-[16px] text-muted-foreground">{intro.subtitle}</p>
+              </div>
+            )}
             {screen === "all-programs" && <AllProgramsGrid onOpenProgram={(p) => { setActiveProgram(p); setScreen("program-detail"); }} onCreateProgram={() => setScreen("create-program")} />}
             {screen === "program-detail" && selectedProgram && "trustSummary" in selectedProgram && <BrandProgramDetail program={selectedProgram as any} onOpenCommission={openCommission} />}
-            {screen === "queue" && <CommissionQueue programFilter={activeProgram} onOpenCommission={openCommission} />}
+            {screen === "queue" && <CommissionQueue programFilter={activeProgram} onOpenCommission={openCommission} showHeader={false} />}
             {screen === "detail" && <CommissionDetailBrand commission={activeCommission} />}
-            {screen === "disputes" && <DisputeInbox onOpenCommission={openCommission} />}
-            {screen === "publishers" && <PublishersList programFilter={activeProgram} />}
+            {screen === "disputes" && <DisputeInbox onOpenCommission={openCommission} showListHeader={false} />}
+            {screen === "publishers" && <PublishersList programFilter={activeProgram} showHeader={false} />}
             {screen === "test-flight" && (
               <div className="rounded-[20px] border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_black]">
-                <h2 className="text-[24px] font-semibold tracking-[-0.2px] text-[#04070f]">Test Flight</h2>
                 <p className="mt-2 text-[14px] text-muted-foreground">This is a placeholder screen for Test Flight navigation.</p>
               </div>
             )}
