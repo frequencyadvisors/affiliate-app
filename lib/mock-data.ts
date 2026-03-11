@@ -435,7 +435,7 @@ export const BRANDS: Record<string, BrandEntity> = {
 };
 
 export const BUSINESS_UNITS: Record<string, BusinessUnit> = {
-  "bu-feastables-core": { id: "bu-feastables-core", brandId: "brand-mr-beast", name: "Feasibles" },
+  "bu-feastables-core": { id: "bu-feastables-core", brandId: "brand-mr-beast", name: "Feastables" },
   "bu-feastables-seasonal": { id: "bu-feastables-seasonal", brandId: "brand-mr-beast", name: "Lunchly" }
 };
 
@@ -445,7 +445,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandId: "brand-mr-beast",
     brandName: "Feastables",
     businessUnitId: "bu-feastables-core",
-    businessUnitName: "Feasibles",
+    businessUnitName: "Feastables",
     status: "active",
     commissionRate: "14%",
     commissionType: "Revenue share",
@@ -463,7 +463,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandId: "brand-mr-beast",
     brandName: "Feastables",
     businessUnitId: "bu-feastables-core",
-    businessUnitName: "Feasibles",
+    businessUnitName: "Feastables",
     status: "active",
     commissionRate: "18%",
     commissionType: "Revenue share",
@@ -499,7 +499,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandId: "brand-mr-beast",
     brandName: "Feastables",
     businessUnitId: "bu-feastables-core",
-    businessUnitName: "Feasibles",
+    businessUnitName: "Feastables",
     status: "active",
     commissionRate: "13%",
     commissionType: "Revenue share",
@@ -517,7 +517,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandId: "brand-mr-beast",
     brandName: "Feastables",
     businessUnitId: "bu-feastables-core",
-    businessUnitName: "Feasibles",
+    businessUnitName: "Feastables",
     status: "active",
     commissionRate: "16%",
     commissionType: "Revenue share",
