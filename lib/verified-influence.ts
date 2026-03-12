@@ -40,6 +40,25 @@ export type AttributionRecord = {
   signals: EvidenceSignal[];
 };
 
+export type AttributionTimelineEvent = {
+  id: string;
+  title: string;
+  subtitle: string;
+  timestamp: string;
+  icon:
+    | "link"
+    | "monitor"
+    | "spark"
+    | "eye"
+    | "cart"
+    | "card"
+    | "alert"
+    | "success"
+    | "review"
+    | "reverse";
+  tone: "default" | "alert" | "success" | "review";
+};
+
 function toBuyerBehaviour(segment: string) {
   if (segment.includes("Repeat")) return "Repeat buyer";
   if (segment.includes("Deal")) return "Deal-driven purchase";
@@ -62,6 +81,209 @@ function toSourceLabel(source: string) {
 function getEstimatedOrderValue(commission: Commission) {
   const rate = getProgramCommissionRatePercent(commission.programName);
   return rate > 0 ? commission.amount / (rate / 100) : commission.amount;
+}
+
+function formatTimelineTime(iso: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short"
+  })
+    .format(new Date(iso))
+    .replace(" ", "")
+    .toUpperCase();
+}
+
+function addMinutes(iso: string, minutes: number) {
+  return new Date(new Date(iso).getTime() + minutes * 60000).toISOString();
+}
+
+function getReviewTimestamp(commission: Commission) {
+  const reviewStep = commission.stateHistory.find((step) => step.status === "pending" || step.status === "locked");
+  return reviewStep?.at ?? commission.conversionTimestamp;
+}
+
+function getReversalTimestamp(commission: Commission) {
+  const reversedStep = commission.stateHistory.find((step) => step.status === "reversed");
+  return reversedStep?.at ?? addMinutes(commission.conversionTimestamp, 1440);
+}
+
+function getReturnVisitCopy(device: string) {
+  if (device === "Desktop") {
+    return {
+      title: "They came back to the site on their computer to look around.",
+      subtitle: "Multi-session return on Desktop"
+    };
+  }
+
+  if (device === "Tablet") {
+    return {
+      title: "They came back to browse again from their tablet.",
+      subtitle: "Multi-session return on Tablet"
+    };
+  }
+
+  return {
+    title: "They kept browsing after the first click.",
+    subtitle: `Multi-session return on ${device}`
+  };
+}
+
+function getContinuityCopy(state: AttributionState) {
+  if (state === "verified") {
+    return {
+      title: "The click path stayed connected across their journey.",
+      subtitle: "Session continuity remained strong."
+    };
+  }
+
+  if (state === "unestablished") {
+    return {
+      title: "We could not fully connect the click path to checkout.",
+      subtitle: "Session continuity weakened before purchase."
+    };
+  }
+
+  return {
+    title: "We’ve linked their original click to the later visit.",
+    subtitle: "Cross-device or probabilistic match."
+  };
+}
+
+function getAlertCopy(commission: Commission, attribution: AttributionRecord) {
+  if (commission.status === "reversed") {
+    return {
+      title: "A conflicting validation signal was raised on this sale.",
+      subtitle: attribution.conflictingSignal ?? "This commission entered a contested review flow."
+    };
+  }
+
+  if (commission.riskFlags?.length) {
+    return {
+      title: `${commission.riskFlags[0]} challenged this sale.`,
+      subtitle: attribution.conflictingSignal ?? "A risk signal introduced competing attribution evidence."
+    };
+  }
+
+  return {
+    title: "A dispute was opened on this commission.",
+    subtitle: attribution.conflictingSignal ?? "The original attribution path is under review."
+  };
+}
+
+export function getAttributionTimeline(commission: Commission, attribution: AttributionRecord): AttributionTimelineEvent[] {
+  const journeyMinutes = Math.max(6, getClickToConversionMinutes(commission.clickTimestamp, commission.conversionTimestamp));
+  const browseTime = addMinutes(commission.clickTimestamp, Math.min(2, Math.max(1, journeyMinutes - 4)));
+  const continuityTime = addMinutes(commission.clickTimestamp, Math.min(3, Math.max(2, journeyMinutes - 3)));
+  const productTime = addMinutes(commission.clickTimestamp, Math.min(4, Math.max(3, journeyMinutes - 2)));
+  const cartTime = addMinutes(commission.clickTimestamp, Math.min(5, Math.max(4, journeyMinutes - 1)));
+  const checkoutTime = addMinutes(commission.clickTimestamp, Math.min(6, Math.max(5, journeyMinutes)));
+  const returnVisit = getReturnVisitCopy(commission.device);
+  const continuity = getContinuityCopy(attribution.state);
+
+  const events: AttributionTimelineEvent[] = [
+    {
+      id: "link",
+      title: "Link clicked for the first time!",
+      subtitle: `Referral captured via ${attribution.creatorInteraction.replace(" clicked", "")}.`,
+      timestamp: formatTimelineTime(commission.clickTimestamp),
+      icon: "link",
+      tone: "default"
+    },
+    {
+      id: "return",
+      title: returnVisit.title,
+      subtitle: returnVisit.subtitle,
+      timestamp: formatTimelineTime(browseTime),
+      icon: "monitor",
+      tone: "default"
+    },
+    {
+      id: "continuity",
+      title: continuity.title,
+      subtitle: continuity.subtitle,
+      timestamp: formatTimelineTime(continuityTime),
+      icon: "spark",
+      tone: attribution.state === "unestablished" ? "alert" : "default"
+    },
+    {
+      id: "product",
+      title: "They are checking out specific products you recommended.",
+      subtitle: `High-intent views around ${attribution.product}.`,
+      timestamp: formatTimelineTime(productTime),
+      icon: "eye",
+      tone: "default"
+    },
+    {
+      id: "cart",
+      title: "They added your pick to their cart!",
+      subtitle: "Product added to cart during the referral journey.",
+      timestamp: formatTimelineTime(cartTime),
+      icon: "cart",
+      tone: "default"
+    },
+    {
+      id: "checkout",
+      title: "They’ve started the checkout process.",
+      subtitle: `Checkout started with a ${attribution.confidence.toLowerCase()}-confidence attribution path.`,
+      timestamp: formatTimelineTime(checkoutTime),
+      icon: "card",
+      tone: "default"
+    }
+  ];
+
+  if (attribution.state === "disputed") {
+    const alertCopy = getAlertCopy(commission, attribution);
+    events.push({
+      id: "alert",
+      title: alertCopy.title,
+      subtitle: alertCopy.subtitle,
+      timestamp: formatTimelineTime(addMinutes(commission.conversionTimestamp, 1)),
+      icon: "alert",
+      tone: "alert"
+    });
+  }
+
+  if (attribution.state !== "unestablished") {
+    events.push({
+      id: "conversion",
+      title: "The sale is complete. You get the credit!",
+      subtitle: "Order finalized and verified.",
+      timestamp: formatTimelineTime(commission.conversionTimestamp),
+      icon: "success",
+      tone: "success"
+    });
+  }
+
+  if (["pending", "recorded", "locked"].includes(commission.status)) {
+    events.push({
+      id: "review",
+      title: "Your commission is being reviewed",
+      subtitle:
+        commission.status === "locked"
+          ? "Commission is locked while validation finishes."
+          : "Commission remains in review before final approval.",
+      timestamp: formatTimelineTime(getReviewTimestamp(commission)),
+      icon: "review",
+      tone: "review"
+    });
+  }
+
+  if (commission.status === "reversed") {
+    events.push({
+      id: "reversed",
+      title:
+        commission.reversalCategory === "Customer"
+          ? "The customer changed their mind and returned the items"
+          : "The brand reversed the commission after review.",
+      subtitle: commission.reversalNote || commission.reversalReason || "A reversal event was recorded for this order.",
+      timestamp: formatTimelineTime(getReversalTimestamp(commission)),
+      icon: "reverse",
+      tone: "alert"
+    });
+  }
+
+  return events;
 }
 
 export function getAttributionRecord(commission: Commission): AttributionRecord {
