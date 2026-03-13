@@ -38,8 +38,8 @@ That is an observation from the current source tree and a repository-wide text s
 - Tailwind CSS v4 through CSS-first configuration
 - PostCSS plugin: `@tailwindcss/postcss`
 - No `tailwind.config.*` file is present; theme tokens live in `app/globals.css`
-- Fonts are loaded with `next/font/google`:
-  - `Jost`
+- Fonts are loaded from the local `geist` package:
+  - `Geist Sans`
   - `Geist Mono`
 
 ### UI and visualization
@@ -137,7 +137,7 @@ Brand screens currently include:
 - Program detail
 - Commission queue
 - Commission detail
-- Disputes
+- Commission issue review (`disputes` in the current code)
 - Publishers list
 - Business units
 - Create program
@@ -160,8 +160,8 @@ Publisher screens currently include:
 
 - Earnings dashboard
 - Commission detail
-- Dispute wizard
-- Dispute tracking
+- Commission issue submission (`dispute-wizard` in the current code)
+- Commission issue tracking (`disputes` in the current code)
 - My programs
 - Discover programs
 - Program detail
@@ -205,7 +205,7 @@ This is the largest and most important data file in the prototype. It contains:
 - Core types such as `Commission`, `Dispute`, `BrandEntity`, and `BusinessUnit`
 - Demo constants such as `DEMO_SHARED_PROGRAM_NAME` and `DEMO_SHARED_COMMISSION_ID`
 - Synthetic and hand-authored commission data
-- Dispute data
+- Commission issue data, currently modeled with `Dispute` types
 - Brand, business unit, creator, customer, and program datasets
 - Formatting helpers and derived access helpers
 
@@ -249,7 +249,7 @@ Key details:
 - Theme tokens are defined as CSS variables on `:root`
 - Status colors for commission states are explicitly tokenized
 - Capture mode layout classes are defined here
-- Body typography uses the `Jost` font variable
+- Body typography uses local Geist fonts, with `--font-jost` kept as a compatibility alias for generated components
 
 There is also a partial dark theme token block, but the app appears designed primarily around the light theme.
 
@@ -280,12 +280,13 @@ Deployment is currently set up for Vercel.
 
 There are no environment variables referenced in the codebase right now, so deployment is relatively simple.
 
-The practical blocker in this checkout is more basic: dependencies are not installed locally. When I ran:
+The repo now uses:
 
-- `npm run build`
-- `npm run lint`
+- `npm run build` -> `next build --webpack`
+- `npm run start` -> `next start`
+- `npm run lint` -> `tsc --noEmit`
 
-both failed because the `next` binary is not present until `npm install` has been run.
+That gives the project a stable local and server-side path even though the prototype does not yet have a full ESLint setup.
 
 ## 10. Notable implementation details
 
@@ -327,6 +328,6 @@ If the goal is to move from prototype toward a shareable product shell, the high
 2. Separate demo data from UI concerns so the mock layer is easier to replace.
 3. Introduce real route structure instead of routing only through query params.
 4. Decide whether the Figma capture code stays in mainline app code or moves behind a dev-only flag.
-5. Add a minimal backend plan for auth, programs, commissions, disputes, and payouts.
+5. Add a minimal backend plan for auth, programs, commissions, commission issue workflows, and payouts.
 
 Until then, treat this repository as a polished interactive prototype, not an application with production plumbing.

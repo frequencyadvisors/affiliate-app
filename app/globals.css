@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  --font-jost: var(--font-geist-sans);
   --background: #e0f9ff;
   --foreground: #04070f;
   --card: #ffffff;

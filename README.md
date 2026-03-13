@@ -2,7 +2,7 @@
 
 Freeq Affiliate is a Next.js prototype for a creator affiliate marketplace. It models how brands and creators could browse programs, review commissions, handle commission reversals, and eventually coordinate payouts. The current repository is a front-end prototype only: it is rich in flows and mock data, but it does not yet include a backend, authentication, persistence, or payment execution.
 
-For a deeper code map, see [`source_overview.md`](./source_overview.md).
+For a deeper code map, see [`SOURCE_OVERVIEW.md`](./SOURCE_OVERVIEW.md).
 
 ## Current status
 
@@ -40,9 +40,8 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ### Notes
 
-- This checkout currently does not include `node_modules`, so `npm install` is required before the app can run.
-- I attempted `npm run build` and `npm run lint` in the current workspace, and both fail right now because `next` is not installed locally yet.
 - The app only defines one page route, `/`. Different prototype screens are selected through query parameters instead of multiple filesystem routes.
+- Fonts are loaded from the local `geist` package, so builds do not depend on fetching Google Fonts at build time.
 
 ## Useful URLs
 
@@ -55,9 +54,26 @@ Then open [http://localhost:3000](http://localhost:3000).
 ## Scripts
 
 - `npm run dev`: start the local development server
-- `npm run build`: produce the production build
+- `npm run build`: produce the production build with Webpack
 - `npm run start`: start the production server
-- `npm run lint`: run the configured lint command
+- `npm run lint`: run the current TypeScript typecheck
+- `npm run typecheck`: run the TypeScript typecheck directly
+
+## Ubuntu / EC2 Notes
+
+The same flow used locally should work on an Ubuntu EC2 instance:
+
+```bash
+npm install
+npm run build
+npm run start -- --hostname 0.0.0.0 --port 3000
+```
+
+Operational notes:
+
+- Use the same major Node.js version you use locally to minimize drift.
+- Open the instance security group for the port you actually serve, or put the app behind Nginx and only expose `80` and `443`.
+- If you use a reverse proxy, keep the Node app bound to `127.0.0.1` instead of `0.0.0.0`.
 
 ## Deployment
 
