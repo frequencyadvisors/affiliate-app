@@ -13,7 +13,7 @@ export const TableHeader = (p: React.HTMLAttributes<HTMLTableSectionElement>) =>
 );
 export const TableBody = (p: React.HTMLAttributes<HTMLTableSectionElement>) => <tbody className="[&_tr:last-child]:border-0" {...p} />;
 export const TableRow = ({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) => (
-  <tr className={cn("border-b border-black/12 transition-colors hover:bg-[rgba(242,253,255,0.45)]", className)} {...props} />
+  <tr className={cn("border-b border-black/20 transition-colors hover:bg-[rgba(242,253,255,0.45)]", className)} {...props} />
 );
 export const TableHead = ({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
   <th

@@ -17,32 +17,42 @@ export function ProgramCard({
   brandName,
   status,
   programName,
+  intro,
   description,
   primaryMetrics,
   stats,
   onOpen,
   badgeLabel,
-  ctaLabel = "View Program"
+  ctaLabel = "View Program",
+  className
 }: {
   brandName: string;
   status: string;
   programName: string;
-  description: string;
+  intro?: string;
+  description?: string;
   primaryMetrics: [ProgramCardPrimaryMetric, ProgramCardPrimaryMetric];
   stats: ProgramCardStat[];
   onOpen: () => void;
   badgeLabel?: string;
   ctaLabel?: string;
+  className?: string;
 }) {
   return (
-    <article className="flex h-[460px] max-h-[460px] w-full min-w-0 flex-col overflow-hidden rounded-[20px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_black]">
+    <article
+      className={[
+        "flex h-[460px] max-h-[460px] w-full min-w-0 flex-col overflow-hidden rounded-[20px] border-2 border-black bg-white shadow-[4px_4px_0px_0px_black]",
+        className ?? ""
+      ].join(" ")}
+    >
       <div className="flex min-h-px min-w-0 flex-1 flex-col gap-[15px] px-5 pt-5">
         <div className="flex items-start justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.6px] text-[#ff6088]">{brandName}</p>
           <Badge className="h-[25px] border-0 px-[10px] py-[5px] text-[12px] font-medium shadow-none">{badgeLabel || status}</Badge>
         </div>
         <h2 className="text-[30px] font-semibold leading-[100%] tracking-[-0.2px] text-[#04070f]">{programName}</h2>
-        <p className="text-[14px] leading-[18.2px] text-muted-foreground">{description}</p>
+        {intro ? <p className="text-[14px] leading-[18.2px] text-muted-foreground">{intro}</p> : null}
+        {description ? <p className="text-[14px] leading-[18.2px] text-muted-foreground">{description}</p> : null}
       </div>
 
       <div

@@ -7,7 +7,7 @@ const DISCOVER = [
     brand: "Feastables",
     programName: "Chocolate Bar Drop Vol. 3",
     category: "Snacks",
-    description: "Launch-focused chocolate drops.",
+    intro: "Promote a limited-release chocolate drop built for creator launches and short burst campaigns.",
     rate: "14%",
     cookie: "14 days",
     attribution: "Last-click",
@@ -17,7 +17,7 @@ const DISCOVER = [
     brand: "Feastables",
     programName: "Creator Collab Series",
     category: "Snacks",
-    description: "Creator capsule collabs.",
+    intro: "Feature rotating capsule collaborations that pair strong conversion intent with creator-first storytelling.",
     rate: "18%",
     cookie: "30 days",
     attribution: "Last-click",
@@ -27,7 +27,7 @@ const DISCOVER = [
     brand: "Feastables",
     programName: "Back to School Bundle",
     category: "Snacks",
-    description: "Student-themed bundles.",
+    intro: "Drive seasonal bundle sales around campus routines, dorm essentials, and back-to-school shopping moments.",
     rate: "11%",
     cookie: "7 days",
     attribution: "Last-click",
@@ -37,7 +37,7 @@ const DISCOVER = [
     brand: "Hydr8",
     programName: "Summer Hydration",
     category: "Wellness",
-    description: "Hydration packs + refills.",
+    intro: "Promote hydration packs and refill routines designed for fitness creators and warm-weather wellness content.",
     rate: "12%",
     cookie: "21 days",
     attribution: "Last-click",
@@ -47,7 +47,7 @@ const DISCOVER = [
     brand: "NordLane",
     programName: "Cold Brew Launch",
     category: "Beverage",
-    description: "DTC cold brew subscription.",
+    intro: "Support a direct-to-consumer cold brew launch with subscription-friendly messaging for daily ritual audiences.",
     rate: "9%",
     cookie: "30 days",
     attribution: "Last-click",
@@ -57,7 +57,7 @@ const DISCOVER = [
     brand: "KiteFuel",
     programName: "Protein Essentials",
     category: "Fitness",
-    description: "Protein stack starter pack.",
+    intro: "Highlight an entry-point protein stack tailored to gym, recovery, and everyday performance content.",
     rate: "15%",
     cookie: "14 days",
     attribution: "Last-click",
@@ -71,11 +71,12 @@ export function DiscoverPrograms({ onOpenProgram }: { onOpenProgram: (name: stri
       {DISCOVER.map((p) => (
         <ProgramCard
           key={p.programName}
+          className="h-[410px] max-h-[410px]"
           brandName={p.brand}
           status="Open"
           badgeLabel={p.category}
           programName={p.programName}
-          description={p.description}
+          intro={p.intro}
           primaryMetrics={[
             { label: "Commission Rate", value: p.rate },
             { label: "Cookie Window", value: p.cookie }

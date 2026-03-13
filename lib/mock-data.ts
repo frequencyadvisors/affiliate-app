@@ -1,5 +1,16 @@
 export type CommissionStatus = "recorded" | "pending" | "approved" | "reversed" | "locked" | "paid";
 
+export type CommissionJourneyStage =
+  | "link_clicked"
+  | "product_viewed"
+  | "added_to_cart"
+  | "checkout_started"
+  | "transaction_recorded"
+  | "in_validation"
+  | "approved_for_payout"
+  | "paid_out"
+  | "returned_after_review";
+
 export type StateTransition = {
   status: CommissionStatus;
   at: string;
@@ -19,6 +30,7 @@ export type Commission = {
   clickTimestamp: string;
   conversionTimestamp: string;
   orderId: string;
+  journeyStage: CommissionJourneyStage;
   attributionModel: string;
   cookieWindow: string;
   device: string;
@@ -83,16 +95,38 @@ const base = {
   validationWindowDays: 21
 };
 
-function history(status: CommissionStatus, createdAt: string): StateTransition[] {
-  const steps: CommissionStatus[] = ["recorded", "pending"];
-  if (status === "approved" || status === "locked" || status === "paid") steps.push("approved");
-  if (status === "locked" || status === "paid") steps.push("locked");
-  if (status === "paid") steps.push("paid");
-  if (status === "reversed") steps.push("reversed");
+export const DEMO_SHARED_PROGRAM_NAME = "Chocolate Bar Drop Vol. 3";
+export const DEMO_SHARED_COMMISSION_ID = "COM-1017";
+
+function getJourneyStageForStatus(status: CommissionStatus): CommissionJourneyStage {
+  if (status === "recorded") return "transaction_recorded";
+  if (status === "pending") return "in_validation";
+  if (status === "approved") return "approved_for_payout";
+  if (status === "locked") return "approved_for_payout";
+  if (status === "paid") return "paid_out";
+  return "returned_after_review";
+}
+
+function history(status: CommissionStatus, createdAt: string, journeyStage: CommissionJourneyStage = getJourneyStageForStatus(status)): StateTransition[] {
+  const steps: CommissionStatus[] =
+    journeyStage === "link_clicked" || journeyStage === "product_viewed" || journeyStage === "added_to_cart" || journeyStage === "checkout_started"
+      ? ["recorded"]
+      : journeyStage === "transaction_recorded" || journeyStage === "in_validation"
+        ? ["recorded", "pending"]
+        : journeyStage === "approved_for_payout"
+          ? status === "locked"
+            ? ["recorded", "pending", "approved", "locked"]
+            : ["recorded", "pending", "approved"]
+          : journeyStage === "paid_out"
+            ? ["recorded", "pending", "approved", "locked", "paid"]
+            : ["recorded", "pending", "approved", "reversed"];
   return steps.map((s, i) => ({ status: s, at: new Date(new Date(createdAt).getTime() + i * 86400000).toISOString(), by: s === "reversed" ? "Brand Ops" : "System" }));
 }
 
 const SYNTHETIC_PROGRAM_META = [
+  { programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", cookieWindow: "14 days" },
+  { programName: "Creator Collab Series", programId: "prog-creator-collab", cookieWindow: "30 days" },
+  { programName: "Back to School Bundle", programId: "prog-back-to-school", cookieWindow: "7 days" },
   { programName: "Midnight Crunch Drop", programId: "prog-midnight-crunch", cookieWindow: "14 days" },
   { programName: "Protein Starter Stack", programId: "prog-protein-stack", cookieWindow: "30 days" },
   { programName: "Lunchly Family Pack", programId: "prog-lunchly-family-pack", cookieWindow: "14 days" },
@@ -171,6 +205,7 @@ const SYNTHETIC_COMMISSIONS: Commission[] = SYNTHETIC_CUSTOMERS.map((customer, i
   const clickDate = new Date(conversionDate.getTime() - (8 + (idx % 22)) * 60000);
   const statusCycle: CommissionStatus[] = ["approved", "paid", "locked", "pending", "recorded", "approved", "paid", "reversed"];
   const status = statusCycle[idx % statusCycle.length];
+  const journeyStage = getJourneyStageForStatus(status);
   const baseAmount = 18 + (idx % 11) * 7 + (idx % 3) * 3.5;
 
   return {
@@ -181,6 +216,7 @@ const SYNTHETIC_COMMISSIONS: Commission[] = SYNTHETIC_CUSTOMERS.map((customer, i
     amount: Number((baseAmount + (status === "paid" ? 8 : 0)).toFixed(2)),
     currency: "USD",
     status,
+    journeyStage,
     clickTimestamp: clickDate.toISOString(),
     conversionTimestamp: conversionDate.toISOString(),
     orderId: customer.orderId,
@@ -195,26 +231,119 @@ const SYNTHETIC_COMMISSIONS: Commission[] = SYNTHETIC_CUSTOMERS.map((customer, i
     reversalNote: status === "reversed" ? "Auto-generated cancellation from enriched mock dataset." : undefined,
     reversalConfidence: status === "reversed" ? "medium" : undefined,
     riskFlags: status === "pending" && idx % 4 === 0 ? ["Velocity anomaly"] : undefined,
-    stateHistory: history(status, conversionDate.toISOString()),
+    stateHistory: history(status, conversionDate.toISOString(), journeyStage),
     ...base
   };
 });
 
+const MANUAL_COMMISSIONS: Commission[] = [
+  { id: "COM-1001", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "SnackScope", amount: 42.3, currency: "USD", status: "paid", journeyStage: "paid_out", clickTimestamp: "2026-01-03T11:00:00Z", conversionTimestamp: "2026-01-03T11:11:00Z", orderId: "ORD-9011", cookieWindow: "14 days", device: "iOS", referrerSource: "YouTube", customerType: "New", productCategory: "Chocolate", conversionType: "Purchase", stateHistory: history("paid", "2026-01-03T11:11:00Z", "paid_out"), ...base },
+  { id: "COM-1002", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "MiloEats", amount: 12.4, currency: "USD", status: "reversed", journeyStage: "returned_after_review", clickTimestamp: "2026-01-12T10:20:00Z", conversionTimestamp: "2026-01-12T10:32:00Z", orderId: "ORD-9012", cookieWindow: "14 days", device: "Android", referrerSource: "Instagram", customerType: "Returning", productCategory: "Bars", conversionType: "Purchase", reversalReason: "Cancelled order", reversalCategory: "Customer", reversalNote: "Customer cancelled after checkout during the validation window.", reversalConfidence: "medium", stateHistory: history("reversed", "2026-01-12T10:32:00Z", "returned_after_review"), ...base },
+  { id: "COM-1003", programName: "Creator Collab Series", programId: "prog-creator-collab", publisher: "FitFoodDaily", amount: 78.1, currency: "USD", status: "pending", journeyStage: "in_validation", clickTimestamp: "2026-02-11T12:11:00Z", conversionTimestamp: "2026-02-11T12:20:00Z", orderId: "ORD-9013", cookieWindow: "30 days", device: "Desktop", referrerSource: "TikTok", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", riskFlags: ["High AOV"], stateHistory: history("pending", "2026-02-11T12:20:00Z", "in_validation"), ...base },
+  { id: "COM-1004", programName: "Back to School Bundle", programId: "prog-back-to-school", publisher: "CampusCravings", amount: 196, currency: "USD", status: "reversed", journeyStage: "returned_after_review", clickTimestamp: "2025-12-22T15:00:00Z", conversionTimestamp: "2025-12-22T15:15:00Z", orderId: "ORD-9014", cookieWindow: "7 days", device: "Desktop", referrerSource: "Blog", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", reversalReason: "Duplicate order", reversalCategory: "Quality", reversalNote: "Duplicate checkout detected.", reversalConfidence: "high", stateHistory: history("reversed", "2025-12-22T15:15:00Z", "returned_after_review"), ...base },
+  { id: "COM-1005", programName: "Back to School Bundle", programId: "prog-back-to-school", publisher: "SnackScope", amount: 37.6, currency: "USD", status: "recorded", journeyStage: "transaction_recorded", clickTimestamp: "2026-03-01T09:10:00Z", conversionTimestamp: "2026-03-01T09:14:00Z", orderId: "ORD-9015", cookieWindow: "7 days", device: "iOS", referrerSource: "YouTube", customerType: "Returning", productCategory: "Bundle", conversionType: "Subscription", stateHistory: history("recorded", "2026-03-01T09:14:00Z", "transaction_recorded"), ...base },
+  { id: "COM-1006", programName: "Creator Collab Series", programId: "prog-creator-collab", publisher: "SweetSignals", amount: 64.8, currency: "USD", status: "reversed", journeyStage: "returned_after_review", clickTimestamp: "2026-01-24T16:13:00Z", conversionTimestamp: "2026-01-24T16:41:00Z", orderId: "ORD-9016", cookieWindow: "30 days", device: "Android", referrerSource: "Instagram", customerType: "New", productCategory: "Chocolate", conversionType: "Purchase", reversalReason: "Fraud signal", reversalCategory: "Quality", reversalNote: "Validation flagged a mismatched device fingerprint on the order.", reversalConfidence: "high", stateHistory: history("reversed", "2026-01-24T16:41:00Z", "returned_after_review"), ...base },
+  { id: "COM-1007", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "SnackScope", amount: 55.9, currency: "USD", status: "pending", journeyStage: "in_validation", clickTimestamp: "2025-12-30T14:23:00Z", conversionTimestamp: "2025-12-30T14:34:00Z", orderId: "ORD-9017", cookieWindow: "14 days", device: "Desktop", referrerSource: "Newsletter", customerType: "Returning", productCategory: "Bars", conversionType: "Purchase", riskFlags: ["Past due validation"], stateHistory: history("pending", "2025-12-30T14:34:00Z", "in_validation"), ...base },
+  { id: "COM-1008", programName: "Creator Collab Series", programId: "prog-creator-collab", publisher: "CrateReview", amount: 83.2, currency: "USD", status: "paid", journeyStage: "paid_out", clickTimestamp: "2026-01-08T18:40:00Z", conversionTimestamp: "2026-01-08T18:54:00Z", orderId: "ORD-9018", cookieWindow: "30 days", device: "iOS", referrerSource: "YouTube", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", stateHistory: history("paid", "2026-01-08T18:54:00Z", "paid_out"), ...base },
+  { id: "COM-1009", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "MiloEats", amount: 24.5, currency: "USD", status: "approved", journeyStage: "approved_for_payout", clickTimestamp: "2026-02-01T08:15:00Z", conversionTimestamp: "2026-02-01T08:44:00Z", orderId: "ORD-9019", cookieWindow: "14 days", device: "Desktop", referrerSource: "Search", customerType: "New", productCategory: "Bars", conversionType: "Purchase", stateHistory: history("approved", "2026-02-01T08:44:00Z", "approved_for_payout"), ...base },
+  { id: "COM-1010", programName: "Back to School Bundle", programId: "prog-back-to-school", publisher: "FitFoodDaily", amount: 29.9, currency: "USD", status: "reversed", journeyStage: "returned_after_review", clickTimestamp: "2026-02-04T10:30:00Z", conversionTimestamp: "2026-02-04T10:50:00Z", orderId: "ORD-9020", cookieWindow: "7 days", device: "Android", referrerSource: "TikTok", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", reversalReason: "Cancelled order", reversalCategory: "Customer", reversalNote: "Customer cancelled before fulfillment.", reversalConfidence: "medium", stateHistory: history("reversed", "2026-02-04T10:50:00Z", "returned_after_review"), ...base },
+  { id: "COM-1011", programName: "Creator Collab Series", programId: "prog-creator-collab", publisher: "CampusCravings", amount: 90.25, currency: "USD", status: "locked", journeyStage: "approved_for_payout", clickTimestamp: "2026-01-14T19:00:00Z", conversionTimestamp: "2026-01-14T19:24:00Z", orderId: "ORD-9021", cookieWindow: "30 days", device: "Desktop", referrerSource: "Blog", customerType: "Returning", productCategory: "Collab Box", conversionType: "Purchase", stateHistory: history("locked", "2026-01-14T19:24:00Z", "approved_for_payout"), ...base },
+  { id: "COM-1012", programName: "Back to School Bundle", programId: "prog-back-to-school", publisher: "CrateReview", amount: 41.75, currency: "USD", status: "recorded", journeyStage: "transaction_recorded", clickTimestamp: "2026-03-02T13:11:00Z", conversionTimestamp: "2026-03-02T13:20:00Z", orderId: "ORD-9022", cookieWindow: "7 days", device: "iOS", referrerSource: "Instagram", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", stateHistory: history("recorded", "2026-03-02T13:20:00Z", "transaction_recorded"), ...base },
+  { id: "COM-1013", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "SweetSignals", amount: 142.5, currency: "USD", status: "pending", journeyStage: "in_validation", clickTimestamp: "2026-02-19T07:20:00Z", conversionTimestamp: "2026-02-19T07:27:00Z", orderId: "ORD-9023", cookieWindow: "14 days", device: "Desktop", referrerSource: "YouTube", customerType: "New", productCategory: "Collector Pack", conversionType: "Purchase", riskFlags: ["Bulk checkout"], stateHistory: history("pending", "2026-02-19T07:27:00Z", "in_validation"), ...base },
+  { id: "COM-1014", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "QuickBiteTV", amount: 14.2, currency: "USD", status: "recorded", journeyStage: "link_clicked", clickTimestamp: "2026-03-06T14:12:00Z", conversionTimestamp: "2026-03-06T14:12:00Z", orderId: "ORD-9024", cookieWindow: "14 days", device: "iOS", referrerSource: "TikTok", customerType: "New", productCategory: "Chocolate", conversionType: "Assisted Click", stateHistory: history("recorded", "2026-03-06T14:12:00Z", "link_clicked"), ...base },
+  { id: "COM-1015", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "KitchenPulse", amount: 19.8, currency: "USD", status: "recorded", journeyStage: "added_to_cart", clickTimestamp: "2026-03-07T16:04:00Z", conversionTimestamp: "2026-03-07T16:12:00Z", orderId: "ORD-9025", cookieWindow: "14 days", device: "Desktop", referrerSource: "Blog", customerType: "Returning", productCategory: "Bars", conversionType: "Cart Started", stateHistory: history("recorded", "2026-03-07T16:12:00Z", "added_to_cart"), ...base },
+  { id: "COM-1016", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "MacroMia", amount: 31.4, currency: "USD", status: "pending", journeyStage: "in_validation", clickTimestamp: "2026-03-08T10:18:00Z", conversionTimestamp: "2026-03-08T10:34:00Z", orderId: "ORD-9026", cookieWindow: "14 days", device: "Android", referrerSource: "Instagram", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", riskFlags: ["Awaiting transaction validation"], stateHistory: history("pending", "2026-03-08T10:34:00Z", "in_validation"), ...base },
+  { id: DEMO_SHARED_COMMISSION_ID, programName: DEMO_SHARED_PROGRAM_NAME, programId: "prog-choc-vol-3", publisher: "TasteGrid", amount: 26.7, currency: "USD", status: "reversed", journeyStage: "returned_after_review", clickTimestamp: "2026-03-04T09:41:00Z", conversionTimestamp: "2026-03-04T09:58:00Z", orderId: "ORD-9027", cookieWindow: "14 days", device: "Tablet", referrerSource: "YouTube", customerType: "Returning", productCategory: "Chocolate", conversionType: "Purchase", reversalReason: "Customer Return", reversalCategory: "Customer", reversalNote: "Order converted, passed review, and was later clawed back after the customer return posted.", reversalConfidence: "high", stateHistory: history("reversed", "2026-03-04T09:58:00Z", "returned_after_review"), ...base }
+];
+
+type JourneyBucketTarget = {
+  name: "clicked" | "cart" | "checkout" | "pending" | "approved" | "paid" | "reversed";
+  stages: CommissionJourneyStage[];
+};
+
+const JOURNEY_BUCKET_TARGETS: JourneyBucketTarget[] = [
+  { name: "clicked", stages: ["link_clicked", "product_viewed"] },
+  { name: "cart", stages: ["added_to_cart"] },
+  { name: "checkout", stages: ["checkout_started"] },
+  { name: "pending", stages: ["transaction_recorded", "in_validation"] },
+  { name: "approved", stages: ["approved_for_payout"] },
+  { name: "paid", stages: ["paid_out"] },
+  { name: "reversed", stages: ["returned_after_review"] }
+];
+
+function getStatusForJourneyStage(journeyStage: CommissionJourneyStage): CommissionStatus {
+  if (journeyStage === "in_validation") return "pending";
+  if (journeyStage === "approved_for_payout") return "approved";
+  if (journeyStage === "paid_out") return "paid";
+  if (journeyStage === "returned_after_review") return "reversed";
+  return "recorded";
+}
+
+function getConversionTypeForJourneyStage(journeyStage: CommissionJourneyStage) {
+  if (journeyStage === "link_clicked" || journeyStage === "product_viewed") return "Assisted Click";
+  if (journeyStage === "added_to_cart") return "Cart Started";
+  if (journeyStage === "checkout_started") return "Checkout Started";
+  return "Purchase";
+}
+
+const BALANCED_STAGE_COMMISSIONS: Commission[] = (() => {
+  const existing = [...MANUAL_COMMISSIONS, ...SYNTHETIC_COMMISSIONS];
+  const generated: Commission[] = [];
+  let sequence = 0;
+
+  for (const program of SYNTHETIC_PROGRAM_META) {
+    for (const bucket of JOURNEY_BUCKET_TARGETS) {
+      const currentCount = existing.filter(
+        (commission) => commission.programName === program.programName && bucket.stages.includes(commission.journeyStage)
+      ).length + generated.filter(
+        (commission) => commission.programName === program.programName && bucket.stages.includes(commission.journeyStage)
+      ).length;
+
+      for (let missingIndex = currentCount; missingIndex < 2; missingIndex += 1) {
+        const journeyStage = bucket.stages[(sequence + missingIndex) % bucket.stages.length];
+        const status = getStatusForJourneyStage(journeyStage);
+        const createdAt = new Date(Date.UTC(2026, 2, 10 + (sequence % 18), 9 + (sequence % 7), 6 * (sequence % 10)));
+        const clickTimestamp = new Date(createdAt.getTime() - (journeyStage === "link_clicked" ? 0 : 7 + (sequence % 5)) * 60000).toISOString();
+
+        generated.push({
+          id: `COM-${5001 + sequence}`,
+          programName: program.programName,
+          programId: program.programId,
+          publisher: SYNTHETIC_CREATORS[sequence % SYNTHETIC_CREATORS.length],
+          amount: Number((22 + (sequence % 9) * 5.75).toFixed(2)),
+          currency: "USD",
+          status,
+          clickTimestamp,
+          conversionTimestamp: createdAt.toISOString(),
+          orderId: `ORD-${9601 + sequence}`,
+          journeyStage,
+          cookieWindow: program.cookieWindow,
+          device: SYNTHETIC_DEVICES[(sequence + 1) % SYNTHETIC_DEVICES.length],
+          referrerSource: SYNTHETIC_REFERRERS[(sequence + 2) % SYNTHETIC_REFERRERS.length],
+          customerType: sequence % 2 === 0 ? "New" : "Returning",
+          productCategory: sequence % 3 === 0 ? "Bundle" : "Chocolate",
+          conversionType: getConversionTypeForJourneyStage(journeyStage),
+          reversalReason: status === "reversed" ? "Customer Return" : undefined,
+          reversalCategory: status === "reversed" ? "Customer" : undefined,
+          reversalNote: status === "reversed" ? "Balanced mock commission added so each programme shows reversal coverage." : undefined,
+          reversalConfidence: status === "reversed" ? "medium" : undefined,
+          riskFlags: status === "pending" && journeyStage === "in_validation" ? ["Awaiting validation review"] : undefined,
+          stateHistory: history(status, createdAt.toISOString(), journeyStage),
+          ...base
+        });
+
+        sequence += 1;
+      }
+    }
+  }
+
+  return generated;
+})();
+
 export const COMMISSIONS: Commission[] = [
-  { id: "COM-1001", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "SnackScope", amount: 42.3, currency: "USD", status: "paid", clickTimestamp: "2026-01-03T11:00:00Z", conversionTimestamp: "2026-01-03T11:11:00Z", orderId: "ORD-9011", cookieWindow: "14 days", device: "iOS", referrerSource: "YouTube", customerType: "New", productCategory: "Chocolate", conversionType: "Purchase", stateHistory: history("paid", "2026-01-03T11:11:00Z"), ...base },
-  { id: "COM-1002", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "MiloEats", amount: 12.4, currency: "USD", status: "reversed", clickTimestamp: "2026-01-12T10:20:00Z", conversionTimestamp: "2026-01-12T10:32:00Z", orderId: "ORD-9012", cookieWindow: "14 days", device: "Android", referrerSource: "Instagram", customerType: "Returning", productCategory: "Bars", conversionType: "Purchase", reversalReason: "Cancelled order", reversalCategory: "Customer", reversalNote: "Customer cancelled after checkout during the validation window.", reversalConfidence: "medium", stateHistory: history("reversed", "2026-01-12T10:32:00Z"), ...base },
-  { id: "COM-1003", programName: "Creator Collab Series", programId: "prog-creator-collab", publisher: "FitFoodDaily", amount: 78.1, currency: "USD", status: "pending", clickTimestamp: "2026-02-11T12:11:00Z", conversionTimestamp: "2026-02-11T12:20:00Z", orderId: "ORD-9013", cookieWindow: "30 days", device: "Desktop", referrerSource: "TikTok", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", riskFlags: ["High AOV"], stateHistory: history("pending", "2026-02-11T12:20:00Z"), ...base },
-  { id: "COM-1004", programName: "Back to School Bundle", programId: "prog-back-to-school", publisher: "CampusCravings", amount: 196, currency: "USD", status: "reversed", clickTimestamp: "2025-12-22T15:00:00Z", conversionTimestamp: "2025-12-22T15:15:00Z", orderId: "ORD-9014", cookieWindow: "7 days", device: "Desktop", referrerSource: "Blog", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", reversalReason: "Duplicate order", reversalCategory: "Quality", reversalNote: "Duplicate checkout detected.", reversalConfidence: "high", stateHistory: history("reversed", "2025-12-22T15:15:00Z"), ...base },
-  { id: "COM-1005", programName: "Back to School Bundle", programId: "prog-back-to-school", publisher: "SnackScope", amount: 37.6, currency: "USD", status: "recorded", clickTimestamp: "2026-03-01T09:10:00Z", conversionTimestamp: "2026-03-01T09:14:00Z", orderId: "ORD-9015", cookieWindow: "7 days", device: "iOS", referrerSource: "YouTube", customerType: "Returning", productCategory: "Bundle", conversionType: "Subscription", stateHistory: history("recorded", "2026-03-01T09:14:00Z"), ...base },
-  { id: "COM-1006", programName: "Creator Collab Series", programId: "prog-creator-collab", publisher: "SweetSignals", amount: 64.8, currency: "USD", status: "reversed", clickTimestamp: "2026-01-24T16:13:00Z", conversionTimestamp: "2026-01-24T16:41:00Z", orderId: "ORD-9016", cookieWindow: "30 days", device: "Android", referrerSource: "Instagram", customerType: "New", productCategory: "Chocolate", conversionType: "Purchase", reversalReason: "Fraud signal", reversalCategory: "Quality", reversalNote: "Validation flagged a mismatched device fingerprint on the order.", reversalConfidence: "high", stateHistory: history("reversed", "2026-01-24T16:41:00Z"), ...base },
-  { id: "COM-1007", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "SnackScope", amount: 55.9, currency: "USD", status: "pending", clickTimestamp: "2025-12-30T14:23:00Z", conversionTimestamp: "2025-12-30T14:34:00Z", orderId: "ORD-9017", cookieWindow: "14 days", device: "Desktop", referrerSource: "Newsletter", customerType: "Returning", productCategory: "Bars", conversionType: "Purchase", riskFlags: ["Past due validation"], stateHistory: history("pending", "2025-12-30T14:34:00Z"), ...base },
-  { id: "COM-1008", programName: "Creator Collab Series", programId: "prog-creator-collab", publisher: "CrateReview", amount: 83.2, currency: "USD", status: "paid", clickTimestamp: "2026-01-08T18:40:00Z", conversionTimestamp: "2026-01-08T18:54:00Z", orderId: "ORD-9018", cookieWindow: "30 days", device: "iOS", referrerSource: "YouTube", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", stateHistory: history("paid", "2026-01-08T18:54:00Z"), ...base },
-  { id: "COM-1009", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "MiloEats", amount: 24.5, currency: "USD", status: "approved", clickTimestamp: "2026-02-01T08:15:00Z", conversionTimestamp: "2026-02-01T08:44:00Z", orderId: "ORD-9019", cookieWindow: "14 days", device: "Desktop", referrerSource: "Search", customerType: "New", productCategory: "Bars", conversionType: "Purchase", stateHistory: history("approved", "2026-02-01T08:44:00Z"), ...base },
-  { id: "COM-1010", programName: "Back to School Bundle", programId: "prog-back-to-school", publisher: "FitFoodDaily", amount: 29.9, currency: "USD", status: "reversed", clickTimestamp: "2026-02-04T10:30:00Z", conversionTimestamp: "2026-02-04T10:50:00Z", orderId: "ORD-9020", cookieWindow: "7 days", device: "Android", referrerSource: "TikTok", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", reversalReason: "Cancelled order", reversalCategory: "Customer", reversalNote: "Customer cancelled before fulfillment.", reversalConfidence: "medium", stateHistory: history("reversed", "2026-02-04T10:50:00Z"), ...base },
-  { id: "COM-1011", programName: "Creator Collab Series", programId: "prog-creator-collab", publisher: "CampusCravings", amount: 90.25, currency: "USD", status: "locked", clickTimestamp: "2026-01-14T19:00:00Z", conversionTimestamp: "2026-01-14T19:24:00Z", orderId: "ORD-9021", cookieWindow: "30 days", device: "Desktop", referrerSource: "Blog", customerType: "Returning", productCategory: "Collab Box", conversionType: "Purchase", stateHistory: history("locked", "2026-01-14T19:24:00Z"), ...base },
-  { id: "COM-1012", programName: "Back to School Bundle", programId: "prog-back-to-school", publisher: "CrateReview", amount: 41.75, currency: "USD", status: "recorded", clickTimestamp: "2026-03-02T13:11:00Z", conversionTimestamp: "2026-03-02T13:20:00Z", orderId: "ORD-9022", cookieWindow: "7 days", device: "iOS", referrerSource: "Instagram", customerType: "New", productCategory: "Bundle", conversionType: "Purchase", stateHistory: history("recorded", "2026-03-02T13:20:00Z"), ...base },
-  { id: "COM-1013", programName: "Chocolate Bar Drop Vol. 3", programId: "prog-choc-vol-3", publisher: "SweetSignals", amount: 142.5, currency: "USD", status: "pending", clickTimestamp: "2026-02-19T07:20:00Z", conversionTimestamp: "2026-02-19T07:27:00Z", orderId: "ORD-9023", cookieWindow: "14 days", device: "Desktop", referrerSource: "YouTube", customerType: "New", productCategory: "Collector Pack", conversionType: "Purchase", riskFlags: ["Bulk checkout"], stateHistory: history("pending", "2026-02-19T07:27:00Z"), ...base },
-  ...SYNTHETIC_COMMISSIONS
+  ...MANUAL_COMMISSIONS,
+  ...SYNTHETIC_COMMISSIONS,
+  ...BALANCED_STAGE_COMMISSIONS
 ];
 
 export const DETAIL_COMMISSIONS: Commission[] = [
@@ -331,10 +460,9 @@ export const DISPUTES: Dispute[] = [
 ];
 
 export const REVERSAL_REASONS = [
-  { code: "duplicate_order", label: "Duplicate order" },
-  { code: "cancelled_order", label: "Cancelled order" },
-  { code: "fraud_signal", label: "Fraud signal" },
-  { code: "out_of_policy", label: "Out of policy" }
+  { code: "RET-01", label: "Customer Return" },
+  { code: "DUP-02", label: "Duplicate Order" },
+  { code: "POL-03", label: "Policy Violation / Non-Incremental" }
 ];
 
 export function formatCurrency(amount: number, currency: string) {
@@ -412,7 +540,7 @@ export type BrandProgramData = {
   brandName: string;
   businessUnitId: string;
   businessUnitName: string;
-  status: "active" | "draft";
+  status: "active" | "inactive" | "archived" | "draft";
   commissionRate: string;
   commissionType: string;
   cookieWindow: string;
@@ -500,7 +628,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandName: "Feastables",
     businessUnitId: "bu-feastables-core",
     businessUnitName: "Feastables",
-    status: "active",
+    status: "inactive",
     commissionRate: "13%",
     commissionType: "Revenue share",
     cookieWindow: "14 days",
@@ -518,7 +646,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandName: "Feastables",
     businessUnitId: "bu-feastables-core",
     businessUnitName: "Feastables",
-    status: "active",
+    status: "inactive",
     commissionRate: "16%",
     commissionType: "Revenue share",
     cookieWindow: "30 days",
@@ -536,7 +664,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandName: "Feastables",
     businessUnitId: "bu-feastables-seasonal",
     businessUnitName: "Lunchly",
-    status: "active",
+    status: "inactive",
     commissionRate: "12%",
     commissionType: "Revenue share",
     cookieWindow: "14 days",
@@ -554,7 +682,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandName: "Feastables",
     businessUnitId: "bu-feastables-seasonal",
     businessUnitName: "Lunchly",
-    status: "active",
+    status: "archived",
     commissionRate: "10%",
     commissionType: "Revenue share",
     cookieWindow: "7 days",
@@ -572,7 +700,7 @@ export const BRAND_PROGRAMS_DATA: Record<string, BrandProgramData> = {
     brandName: "Feastables",
     businessUnitId: "bu-feastables-seasonal",
     businessUnitName: "Lunchly",
-    status: "active",
+    status: "archived",
     commissionRate: "15%",
     commissionType: "Revenue share",
     cookieWindow: "30 days",
@@ -667,7 +795,11 @@ const BASE_CUSTOMER_PROFILES: Record<string, CustomerProfile> = {
   "ORD-9020": { name: "Tyler Reed", city: "Atlanta", region: "GA", buyerProfile: "Price-Sensitive Buyer", purchased: "School Bundle Mini" },
   "ORD-9021": { name: "Anika Patel", city: "New York", region: "NY", buyerProfile: "Premium Bundle Buyer", purchased: "Creator Collab Mega Box" },
   "ORD-9022": { name: "Cam Flores", city: "Portland", region: "OR", buyerProfile: "Lifestyle Buyer", purchased: "Back to School Bundle" },
-  "ORD-9023": { name: "Jules Martin", city: "Boston", region: "MA", buyerProfile: "Collector Buyer", purchased: "Collector Pack Edition" }
+  "ORD-9023": { name: "Jules Martin", city: "Boston", region: "MA", buyerProfile: "Collector Buyer", purchased: "Collector Pack Edition" },
+  "ORD-9024": { name: "Nina Brooks", city: "Philadelphia", region: "PA", buyerProfile: "Impulse Buyer", purchased: "Chocolate Bar Single" },
+  "ORD-9025": { name: "Marcus Lee", city: "Nashville", region: "TN", buyerProfile: "Repeat Buyer", purchased: "Chocolate Variety Cart" },
+  "ORD-9026": { name: "Priya Shah", city: "Charlotte", region: "NC", buyerProfile: "Creator-Led Shopper", purchased: "Chocolate Bundle Trial" },
+  "ORD-9027": { name: "Harper James", city: "Detroit", region: "MI", buyerProfile: "Gift Buyer", purchased: "Chocolate Gifting Set" }
 };
 
 export const CUSTOMER_PROFILES: Record<string, CustomerProfile> = {
@@ -692,3 +824,15 @@ export const ENROLLED_PROGRAMS: Record<string, EnrolledProgram> = Object.fromEnt
     { ...p, enrolledDate: ["2025-09-12", "2025-10-04", "2026-01-08"][idx], affiliateLink: `https://freeq.app/r/${idx + 401}` }
   ])
 );
+
+export function getAffiliateLinkForProgram(programName: string) {
+  const enrolledProgram = ENROLLED_PROGRAMS[programName];
+  if (enrolledProgram) return enrolledProgram.affiliateLink;
+
+  const normalized = programName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return `https://freeq.app/program/${normalized}?ref=creator-preview`;
+}

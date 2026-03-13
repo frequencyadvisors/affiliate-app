@@ -1,14 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PlusCircle } from "lucide-react";
 import { BRAND_PROGRAMS_DATA } from "@/lib/mock-data";
-import { ProgramCard } from "@/components/program-card";
-import { ListSurface } from "@/components/ui/list-surface";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type ProgramViewMode = "grid" | "list";
-const BRAND_PROGRAM_VIEW_KEY = "freeq:brand:program-view-mode";
+type ProgramLifecycleStatus = "active" | "inactive" | "archived";
+type ProgramFilter = "all" | ProgramLifecycleStatus;
+type ProgramSummaryMetrics = {
+  revenue: string;
+  orders: string;
+  affiliate: string;
+  payout: string;
+  roas: string;
+};
+
+const PROGRAM_STATUS_LABELS: Record<ProgramLifecycleStatus, string> = {
+  active: "Active",
+  inactive: "Inactive",
+  archived: "Archived"
+};
+
+const PROGRAM_FILTERS: { key: ProgramFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "inactive", label: "Inactive" },
+  { key: "archived", label: "Archived" }
+];
+
+const programMetrics: Record<string, ProgramSummaryMetrics> = {
+  "Chocolate Bar Drop Vol. 3": { revenue: "$184k", orders: "1,284", affiliate: "18%", payout: "$21,930", roas: "8.5x" },
+  "Creator Collab Series": { revenue: "$246k", orders: "1,902", affiliate: "18%", payout: "$31,800", roas: "9.1x" },
+  "Back to School Bundle": { revenue: "$128k", orders: "942", affiliate: "11%", payout: "$10,360", roas: "6.7x" },
+  "Midnight Crunch Drop": { revenue: "$0", orders: "0", affiliate: "13%", payout: "$0", roas: "0x" },
+  "Protein Starter Stack": { revenue: "$0", orders: "0", affiliate: "16%", payout: "$0", roas: "0x" },
+  "Lunchly Family Pack": { revenue: "$0", orders: "0", affiliate: "12%", payout: "$0", roas: "0x" },
+  "Holiday Gifting Capsule": { revenue: "$0", orders: "0", affiliate: "10%", payout: "$0", roas: "0x" },
+  "Spring Creator Box": { revenue: "$0", orders: "0", affiliate: "15%", payout: "$0", roas: "0x" }
+};
+
+function parseCompactCurrency(value: string) {
+  const normalized = value.replace(/[$,]/g, "").trim().toLowerCase();
+  if (!normalized) return 0;
+  if (normalized.endsWith("k")) return Number.parseFloat(normalized.slice(0, -1)) * 1000;
+  if (normalized.endsWith("m")) return Number.parseFloat(normalized.slice(0, -1)) * 1000000;
+  return Number.parseFloat(normalized);
+}
+
+function parseCount(value: string) {
+  return Number.parseInt(value.replace(/,/g, ""), 10) || 0;
+}
+
+function parsePercent(value: string) {
+  return Number.parseFloat(value.replace("%", "")) || 0;
+}
+
+function parseRoas(value: string) {
+  return Number.parseFloat(value.replace("x", "")) || 0;
+}
 
 export function AllProgramsGrid({
   businessUnitId,
@@ -19,156 +70,114 @@ export function AllProgramsGrid({
   onOpenProgram: (programName: string) => void;
   onCreateProgram: () => void;
 }) {
-  const programs = Object.values(BRAND_PROGRAMS_DATA).filter((program) =>
-    !businessUnitId || businessUnitId === "all" ? true : program.businessUnitId === businessUnitId
+  const allPrograms = Object.values(BRAND_PROGRAMS_DATA)
+    .filter((program) => (!businessUnitId || businessUnitId === "all" ? true : program.businessUnitId === businessUnitId))
+    .filter((program): program is typeof program & { status: ProgramLifecycleStatus } => program.status !== "draft");
+
+  const [activeFilter, setActiveFilter] = useState<ProgramFilter>("all");
+
+  const counts = allPrograms.reduce<Record<ProgramFilter, number>>(
+    (acc, program) => {
+      acc.all += 1;
+      acc[program.status] += 1;
+      return acc;
+    },
+    { all: 0, active: 0, inactive: 0, archived: 0 }
   );
-  const [viewMode, setViewMode] = useState<ProgramViewMode>("list");
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(BRAND_PROGRAM_VIEW_KEY);
-    if (stored === "grid" || stored === "list") setViewMode(stored);
-  }, []);
+  const filteredPrograms = allPrograms.filter((program) => activeFilter === "all" || program.status === activeFilter);
 
-  function setProgramViewMode(mode: ProgramViewMode) {
-    setViewMode(mode);
-    window.localStorage.setItem(BRAND_PROGRAM_VIEW_KEY, mode);
-  }
-
-  const summaries: Record<string, string> = {
-    "Chocolate Bar Drop Vol. 3": "Limited-run chocolate bar collection including new MrBeast Bar flavors. High conversion, impulse-buy price point.",
-    "Creator Collab Series": "Affiliate program for creator-native partnerships driving Feastables multipack and bundle sales across YouTube and TikTok audiences.",
-    "Back to School Bundle": "Seasonal bundle program targeting high-volume snack purchases for the back-to-school period. Limited enrollment."
-  };
-  const brandCardMetrics: Record<string, { primary: [string, string]; secondary: [string, string, string, string] }> = {
-    "Chocolate Bar Drop Vol. 3": {
-      primary: ["$184k", "1,284"],
-      secondary: ["18%", "$21,930", "1,284", "8.5x"]
+  const listSummary = filteredPrograms.reduce(
+    (acc, program) => {
+      const metrics = programMetrics[program.programName];
+      acc.revenue += parseCompactCurrency(metrics?.revenue || "$0");
+      acc.orders += parseCount(metrics?.orders || "0");
+      acc.affiliate += parsePercent(metrics?.affiliate || program.commissionRate);
+      acc.roas += parseRoas(metrics?.roas || "0x");
+      return acc;
     },
-    "Creator Collab Series": {
-      primary: ["$246k", "1,902"],
-      secondary: ["18%", "$31,800", "1,902", "9.1x"]
-    },
-    "Back to School Bundle": {
-      primary: ["$128k", "942"],
-      secondary: ["11%", "$10,360", "942", "6.7x"]
-    }
-  };
+    { revenue: 0, orders: 0, affiliate: 0, roas: 0 }
+  );
+
+  const avgAffiliate = filteredPrograms.length ? Math.round((listSummary.affiliate / filteredPrograms.length) * 10) / 10 : 0;
+  const avgRoas = filteredPrograms.length ? Math.round((listSummary.roas / filteredPrograms.length) * 10) / 10 : 0;
+  const summaryText = `${filteredPrograms.length} programme${filteredPrograms.length === 1 ? "" : "s"} • $${Math.round(listSummary.revenue).toLocaleString()} revenue • ${listSummary.orders.toLocaleString()} orders • ${avgAffiliate}% affiliate • ${avgRoas}x ROAS`;
 
   return (
     <div className="flex min-h-[calc(100vh-60px)] w-full flex-col">
       <div className="mx-auto w-full max-w-[1180px] flex-1 px-8 py-8">
-        <div className="flex h-[79.773px] w-full flex-col gap-2">
-          <div className="flex h-[50px] items-center justify-between gap-4">
-            <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[24px] tracking-[-0.2px] text-[#04070f]">All Programs</h1>
-            <div className="inline-flex items-center rounded-[10px] border-2 border-black bg-black p-1">
-              <button
-                type="button"
-                onClick={() => setProgramViewMode("grid")}
-                className={[
-                  "rounded-[8px] px-3 py-1 text-[14px] font-semibold",
-                  viewMode === "grid" ? "bg-white text-[#04070f]" : "text-white/80 hover:text-white"
-                ].join(" ")}
-              >
-                Grid View
-              </button>
-              <button
-                type="button"
-                onClick={() => setProgramViewMode("list")}
-                className={[
-                  "rounded-[8px] px-3 py-1 text-[14px] font-semibold",
-                  viewMode === "list" ? "bg-white text-[#04070f]" : "text-white/80 hover:text-white"
-                ].join(" ")}
-              >
-                List View
-              </button>
-            </div>
-          </div>
-          <p className="text-[16px] text-muted-foreground">All affiliate programs created by your organisation.</p>
+        <div className="flex flex-col gap-2">
+          <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[0.9] tracking-[-0.2px] text-[#04070f]">Affiliate Programmes</h1>
+          <p className="text-[16px] text-muted-foreground">All affiliate programmes created by your organisation.</p>
         </div>
 
-        {viewMode === "grid" ? (
-          <div className="mt-[35px] grid items-start gap-4 lg:grid-cols-3">
-            {programs.map((p) => (
-              <ProgramCard
-                key={p.programName}
-                brandName={p.brandName}
-                status="Active"
-                programName={p.programName}
-                description={summaries[p.programName] || "Performance-ready affiliate program with transparent governance and reliable payout behavior."}
-                primaryMetrics={[
-                  { label: "Revenue Generated", value: brandCardMetrics[p.programName]?.primary[0] || "$0" },
-                  { label: "Orders Driven", value: brandCardMetrics[p.programName]?.primary[1] || "0" }
-                ]}
-                stats={[
-                  { label: "Affiliate", value: brandCardMetrics[p.programName]?.secondary[0] || p.commissionRate },
-                  { label: "Total Payout", value: brandCardMetrics[p.programName]?.secondary[1] || "$0" },
-                  { label: "Orders Driven", value: brandCardMetrics[p.programName]?.secondary[2] || "0" },
-                  { label: "ROAS", value: brandCardMetrics[p.programName]?.secondary[3] || "0x" }
-                ]}
-                onOpen={() => onOpenProgram(p.programName)}
-              />
-            ))}
-          </div>
-        ) : (
-          <ListSurface className="mt-[35px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Programme</TableHead>
-                  <TableHead>Business</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Revenue</TableHead>
-                  <TableHead>Orders</TableHead>
-                  <TableHead>Affiliate</TableHead>
-                  <TableHead>ROAS</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+        <div className="mt-12 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as ProgramFilter)}>
+            <TabsList className="h-auto flex-wrap gap-2 rounded-[16px] bg-transparent p-0">
+              {PROGRAM_FILTERS.map((filter) => (
+                <TabsTrigger
+                  key={filter.key}
+                  value={filter.key}
+                  className="rounded-[11px] border-2 border-black bg-[var(--muted)] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-[#04070f] shadow-[2px_2px_0px_0px_black] transition active:translate-x-[1px] active:translate-y-[1px]"
+                  activeClassName="rounded-[11px] border-2 border-black bg-[#04070f] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-white shadow-[2px_2px_0px_0px_black]"
+                  inactiveClassName="hover:bg-[#c8f4ff]"
+                >
+                  {filter.label}
+                  <span className="ml-2 text-[12px] opacity-72">{counts[filter.key]}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
+          <Button type="button" className="self-start lg:self-auto" onClick={onCreateProgram}>
+            <PlusCircle className="h-5 w-5" />
+            Create Programme
+          </Button>
+        </div>
+
+        <div className="mt-5 space-y-5">
+          <div className="overflow-hidden rounded-[18px] border-[3px] border-black bg-white shadow-[3px_3px_0px_0px_black]">
+            <Table className="table-fixed">
+              <TableHeader className="bg-[#f7fafc]">
+                <TableRow className="h-[50px] border-b border-black/20 hover:bg-transparent">
+                  <TableHead className="w-[29%]">Programme</TableHead>
+                  <TableHead className="w-[14%]">Business</TableHead>
+                  <TableHead className="w-[12%]">Status</TableHead>
+                  <TableHead className="w-[12%]">Revenue</TableHead>
+                  <TableHead className="w-[12%]">Orders</TableHead>
+                  <TableHead className="w-[12%]">Affiliate</TableHead>
+                  <TableHead className="w-[10%]">ROAS</TableHead>
+                  <TableHead className="w-[12%] text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {programs.map((p) => (
-                  <TableRow key={p.programName} className="cursor-pointer" onClick={() => onOpenProgram(p.programName)}>
-                    <TableCell className="font-semibold">{p.programName}</TableCell>
-                    <TableCell>{p.businessUnitName}</TableCell>
-                    <TableCell>Active</TableCell>
-                    <TableCell>{brandCardMetrics[p.programName]?.primary[0] || "$0"}</TableCell>
-                    <TableCell>{brandCardMetrics[p.programName]?.primary[1] || "0"}</TableCell>
-                    <TableCell>{brandCardMetrics[p.programName]?.secondary[0] || p.commissionRate}</TableCell>
-                    <TableCell>{brandCardMetrics[p.programName]?.secondary[3] || "0x"}</TableCell>
-                    <TableCell className="text-right">
-                      <button
+                {filteredPrograms.map((program) => (
+                  <TableRow key={program.programName} className="group h-[67px] cursor-pointer bg-white" onClick={() => onOpenProgram(program.programName)}>
+                    <TableCell className="font-semibold">{program.programName}</TableCell>
+                    <TableCell>{program.businessUnitName}</TableCell>
+                    <TableCell>{PROGRAM_STATUS_LABELS[program.status]}</TableCell>
+                    <TableCell className="font-medium">{programMetrics[program.programName]?.revenue || "$0"}</TableCell>
+                    <TableCell>{programMetrics[program.programName]?.orders || "0"}</TableCell>
+                    <TableCell>{programMetrics[program.programName]?.affiliate || program.commissionRate}</TableCell>
+                    <TableCell>{programMetrics[program.programName]?.roas || "0x"}</TableCell>
+                    <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                      <Button
                         type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onOpenProgram(p.programName);
-                        }}
-                        className="rounded-[8px] border border-black px-3 py-1 text-[13px] font-semibold hover:bg-[rgba(55,220,255,0.2)]"
+                        size="sm"
+                        variant="outline"
+                        className="opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                        onClick={() => onOpenProgram(program.programName)}
                       >
                         View
-                      </button>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </ListSurface>
-        )}
-      </div>
+          </div>
 
-      <div className="mt-auto h-[138px] w-full border-t-2 border-black bg-[var(--lime)]">
-        <div className="mx-auto flex h-full w-full max-w-[1180px] items-center justify-center px-8 pt-[2px]">
-          <button className="flex h-[50.391px] items-center gap-4" onClick={onCreateProgram}>
-            <span className="flex h-[50px] w-[50px] items-center justify-center rounded-[14px] border-[3px] border-black bg-primary shadow-[3px_3px_0px_0px_black]">
-              <PlusCircle className="h-6 w-6" />
-            </span>
-            <span className="text-left">
-              <span className="block text-[26.4px] font-semibold leading-[26.4px] tracking-[-0.88px] text-[#04070f]">
-                Create new programs to grow your network
-              </span>
-              <span className="text-[16px] leading-[24px] text-muted-foreground">
-                Use the left rail to create and manage affiliate programs.
-              </span>
-            </span>
-          </button>
+          <div className="rounded-[16px] bg-[#adf0ff] px-[30px] py-[18px] text-[14px] text-[#525c63]">{summaryText}</div>
         </div>
       </div>
     </div>
