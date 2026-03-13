@@ -1,109 +1,79 @@
 "use client";
 
-import { Flag, RotateCcw } from "lucide-react";
-import { BRAND_PROGRAMS_DATA, Commission, CREATOR_PROFILES, CUSTOMER_PROFILES, formatCurrency, formatDateTime, getAgeDays } from "@/lib/mock-data";
-import { getAttributionRecord } from "@/lib/verified-influence";
-import { CommissionStatusChip } from "@/components/commission-status-chip";
+import { useState } from "react";
+import { Flag, RotateCcw, ShieldCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CommissionAuditLogDialog } from "@/components/commission-audit-log-dialog";
+import { BRAND_PROGRAMS_DATA, Commission, CREATOR_PROFILES, CUSTOMER_PROFILES, REVERSAL_REASONS, formatCurrency, formatDateTime, getAgeDays } from "@/lib/mock-data";
+import { getAttributionRecord, getReversalReasonCode, getValidationDaysRemaining } from "@/lib/verified-influence";
+import { CommissionAttributionPanel } from "@/components/commission-attribution-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 export function CommissionDetailBrand({ commission }: { commission: Commission }) {
+  const [selectedReasonCode, setSelectedReasonCode] = useState(getReversalReasonCode(commission).code);
+  const preTransaction = ["link_clicked", "product_viewed", "added_to_cart", "checkout_started"].includes(commission.journeyStage);
   const creator = CREATOR_PROFILES[commission.publisher];
   const customer = CUSTOMER_PROFILES[commission.orderId];
   const commissionRate = parseFloat(BRAND_PROGRAMS_DATA[commission.programName]?.commissionRate || "14");
   const estimatedOrderValue = commissionRate > 0 ? commission.amount / (commissionRate / 100) : commission.amount;
   const attribution = getAttributionRecord(commission);
-  const timelineItems = [
-    { label: "Creator Interaction", value: attribution.creatorInteraction },
-    { label: "Purchase Timestamp", value: attribution.purchaseTimestamp },
-    { label: "Session Continuity", value: attribution.sessionContinuity },
-    ...(attribution.clickTimestamp ? [{ label: "Click Timestamp", value: attribution.clickTimestamp }] : []),
-    { label: "Time to Purchase", value: attribution.timeToPurchase ?? "Unavailable" },
-    { label: "Creator Code", value: attribution.creatorCode }
-  ];
+  const daysRemaining = getValidationDaysRemaining(commission);
+  const reasonCode = getReversalReasonCode(commission);
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_360px]">
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="flex items-start justify-between gap-4 px-5 py-5">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h1 className="text-[22px] font-semibold leading-[22px] tracking-[-0.66px] text-[#04070f]">
-                  {commission.id}
-                </h1>
-                <CommissionStatusChip status={commission.status} />
-              </div>
-              <p className="text-[12px] leading-4 text-[#ff6088]">
-                {attribution.state === "verified"
-                  ? "This commission looks verified"
-                  : attribution.state === "disputed"
-                    ? "This commission is disputed"
-                    : "This commission is still unestablished"}
-              </p>
-            </div>
-            <div className="flex flex-wrap justify-end gap-2">
-              <InlineChip>{attribution.state}</InlineChip>
-              <InlineChip>{attribution.confidence} confidence</InlineChip>
-              <InlineChip>{attribution.buyerBehaviour}</InlineChip>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-[9px] px-[30px] py-[40px] text-center">
-            {timelineItems.map((item, index) => (
-              <div key={item.label} className="flex flex-col items-center gap-[9px]">
-                <div className="flex flex-col items-center gap-[6px]">
-                  <span className="h-[10px] w-[10px] rounded-full bg-[#ff6088]" />
-                  <div className="flex flex-col items-center">
-                    <p className="text-[12px] leading-4 text-[#525c63]">{item.label}</p>
-                    <p className="max-w-[420px] text-[16px] font-medium leading-6 text-[#04070f]">{item.value}</p>
-                  </div>
-                </div>
-                {index < timelineItems.length - 1 ? <div className="h-[33px] w-px bg-black/70" /> : null}
-              </div>
-            ))}
-          </div>
-
-          {attribution.conflictingSignal ? (
-            <div className="px-5 pb-5">
-              <div className="rounded-[14px] bg-[#fff0d9] px-[18px] py-[18px]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#7a3e00]">Why this is contested</p>
-                <p className="mt-2 text-[14px] leading-6 text-[#6d3900]">{attribution.conflictingSignal}</p>
-              </div>
-            </div>
-          ) : attribution.systemNote ? (
-            <div className="px-5 pb-5">
-              <div className="rounded-[14px] border border-black/10 bg-[#f7f9fb] px-[18px] py-[18px]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#525c63]">System Note</p>
-                <p className="mt-2 text-[14px] leading-6 text-[#04070f]/78">{attribution.systemNote}</p>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="grid border-t border-black/10 lg:grid-cols-2">
-            <div className="border-r border-black/10 px-[30px] py-[30px]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/52">Attribution signals</p>
-              <ul className="mt-3 space-y-2">
-                {attribution.signals.map((signal) => (
-                  <li key={signal.label} className="flex gap-2 text-[14px] leading-6 text-[#04070f]">
-                    <span className="font-semibold">
-                      {signal.status === "positive" ? "✓" : signal.status === "warning" ? "⚠" : "✗"}
-                    </span>
-                    <span>{signal.label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="px-[30px] py-[30px]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/52">System confidence</p>
-              <p className="mt-3 max-w-[260px] text-[14px] leading-6 text-[#04070f]/78">{attribution.systemConfidence}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <CommissionAttributionPanel
+        commission={commission}
+        attribution={attribution}
+      />
 
       <div className="space-y-4">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Validation Logic Workspace</CardTitle></CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="rounded-lg border border-black/10 bg-[rgba(247,249,251,0.9)] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.48px] text-muted-foreground">Incrementality Marker</p>
+                  <p className="mt-1 font-semibold text-[#04070f]">{commission.customerType === "New" ? "New customer" : "Returning customer"}</p>
+                </div>
+                <Badge variant={commission.customerType === "New" ? "secondary" : "outline"}>
+                  {commission.customerType === "New" ? "Value created" : "Needs incrementality review"}
+                </Badge>
+              </div>
+              <p className="mt-2 text-[13px] leading-5 text-[#525c63]">
+                {commission.customerType === "New"
+                  ? "This order expands customer reach, which makes commission defense easier."
+                  : "Returning buyers need stronger attribution evidence to justify the payout."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Detail label="Clawback Window" value={`${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining`} />
+              <Detail label="Attribution Rule" value={attribution.activeRule} />
+              <Detail label="Commerce Ref" value={`Shopify ${commission.orderId}`} />
+              <Detail label="Audit Readiness" value={attribution.integritySummary.replace("Attribution Integrity: ", "")} />
+            </div>
+
+            <div className="rounded-lg border border-black/10 bg-[rgba(55,220,255,0.12)] p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-[#04070f]" />
+                <div>
+                  <p className="font-semibold text-[#04070f]">Rule-based fairness</p>
+                  <p className="mt-1 text-[13px] leading-5 text-[#525c63]">
+                    Validation runs against the active contract logic and the shared audit trail, not against subjective judgment.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <CommissionAuditLogDialog commission={commission} attribution={attribution} triggerClassName="w-full" />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader><CardTitle className="text-base">Commission Details</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-2 gap-3 text-sm">
@@ -136,7 +106,7 @@ export function CommissionDetailBrand({ commission }: { commission: Commission }
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <Detail label="Source" value={commission.referrerSource} />
-              <Detail label="Conversion Date" value={formatDateTime(commission.conversionTimestamp)} />
+              <Detail label={preTransaction ? "Last Activity" : "Conversion Date"} value={formatDateTime(commission.conversionTimestamp)} />
             </div>
           </CardContent>
         </Card>
@@ -163,11 +133,27 @@ export function CommissionDetailBrand({ commission }: { commission: Commission }
 
         {(commission.status === "pending" || commission.status === "recorded") && (
           <Card>
-            <CardHeader><CardTitle className="text-base">Brand Actions</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
+            <CardHeader><CardTitle className="text-base">Reversal & Review Workflow</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2 text-sm">
+                <p className="text-xs uppercase tracking-[0.48px] text-muted-foreground">Mandatory Reason Code</p>
+                <Select value={selectedReasonCode} onValueChange={setSelectedReasonCode}>
+                  <SelectContent>
+                    {REVERSAL_REASONS.map((reason) => (
+                      <SelectItem key={reason.code} value={reason.code}>
+                        {reason.code} · {reason.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[13px] leading-5 text-[#525c63]">
+                  Every non-approved commission needs a structured taxonomy so disputes stay clinical and reviewable.
+                </p>
+              </div>
               <Button className="w-full">Approve</Button>
               <Button className="w-full" variant="outline"><RotateCcw className="h-4 w-4" />Reverse</Button>
               <Button className="w-full" variant="outline"><Flag className="h-4 w-4" />Flag</Button>
+              <CommissionAuditLogDialog commission={commission} attribution={attribution} triggerClassName="w-full" />
             </CardContent>
           </Card>
         )}
@@ -176,9 +162,14 @@ export function CommissionDetailBrand({ commission }: { commission: Commission }
           <Card>
             <CardHeader><CardTitle className="text-base">Reversal Details</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
+              <Detail label="Reason Code" value={`${reasonCode.code} · ${reasonCode.label}`} />
               <Detail label="Reason" value={commission.reversalReason || "-"} />
               <Detail label="Confidence" value={commission.reversalConfidence || "-"} />
+              <p className="text-[13px] leading-5 text-[#525c63]">
+                This reversal is grounded in the shared audit record so both sides can review the same evidence chain.
+              </p>
               <Textarea defaultValue={commission.reversalNote} placeholder="Add internal note" />
+              <CommissionAuditLogDialog commission={commission} attribution={attribution} triggerClassName="w-full" />
             </CardContent>
           </Card>
         )}
@@ -193,13 +184,5 @@ function Detail({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="font-medium">{value}</p>
     </div>
-  );
-}
-
-function InlineChip({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex rounded-full border border-black bg-white/80 px-[11px] py-[5px] text-[11px] font-medium capitalize text-[#04070f]">
-      {children}
-    </span>
   );
 }

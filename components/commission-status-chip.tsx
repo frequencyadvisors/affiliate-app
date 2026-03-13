@@ -5,28 +5,67 @@ import {
   CheckCircle2,
   Circle,
   Clock3,
+  MousePointerClick,
   Lock,
+  ShoppingCart,
+  ShoppingBag,
   XCircle
 } from "lucide-react";
 import type { ComponentType } from "react";
-import { CommissionStatus, StateTransition, formatDateTime } from "@/lib/mock-data";
+import { CommissionJourneyStage, CommissionStatus, StateTransition, formatDateTime } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const cfg: Record<CommissionStatus, { label: string; cls: string; icon: ComponentType<{ className?: string }> }> = {
   recorded: { label: "Recorded", cls: "bg-status-recorded-bg text-status-recorded", icon: Circle },
-  pending: { label: "Pending", cls: "bg-status-pending-bg text-status-pending", icon: Clock3 },
+  pending: { label: "In Review", cls: "bg-status-pending-bg text-status-pending", icon: Clock3 },
   approved: { label: "Approved", cls: "bg-status-approved-bg text-status-approved", icon: CheckCircle2 },
   reversed: { label: "Reversed", cls: "bg-status-reversed-bg text-status-reversed", icon: XCircle },
   locked: { label: "Locked", cls: "bg-status-locked-bg text-status-locked", icon: Lock },
   paid: { label: "Paid", cls: "bg-status-paid-bg text-status-paid", icon: Banknote }
 };
 
-export function CommissionStatusChip({ status }: { status: CommissionStatus }) {
-  const Icon = cfg[status].icon;
+const journeyCfg: Partial<Record<CommissionJourneyStage, { label: string; cls: string; icon: ComponentType<{ className?: string }> }>> = {
+  link_clicked: { label: "Clicked", cls: "bg-[#edf1ff] text-[#2947c7]", icon: MousePointerClick },
+  product_viewed: { label: "Clicked", cls: "bg-[#edf1ff] text-[#2947c7]", icon: MousePointerClick },
+  added_to_cart: { label: "Cart", cls: "bg-[#fff1df] text-[#b86400]", icon: ShoppingCart },
+  checkout_started: { label: "Checkout", cls: "bg-[#ffe7e2] text-[#b53d2d]", icon: ShoppingBag },
+  transaction_recorded: { label: "In Review", cls: "bg-[#fff8da] text-[#8f6b00]", icon: Clock3 },
+  in_validation: { label: "In Review", cls: "bg-[#fff8da] text-[#8f6b00]", icon: Clock3 },
+  approved_for_payout: { label: "Approved", cls: "bg-[#e6f7ef] text-[#0f6d45]", icon: CheckCircle2 },
+  paid_out: { label: "Paid", cls: "bg-[#e3f7fb] text-[#116b77]", icon: Banknote },
+  returned_after_review: { label: "Reversed", cls: "bg-[#fde7ef] text-[#a93758]", icon: XCircle }
+};
+
+type CommissionStatusChipViewer = "brand" | "creator";
+
+function getStatusLabel(
+  label: string,
+  status: CommissionStatus,
+  journeyStage: CommissionJourneyStage | undefined,
+  viewer: CommissionStatusChipViewer
+) {
+  if (viewer !== "brand") return label;
+  if (status === "pending" || journeyStage === "transaction_recorded" || journeyStage === "in_validation") {
+    return "Ready for Review";
+  }
+  return label;
+}
+
+export function CommissionStatusChip({
+  status,
+  journeyStage,
+  viewer = "creator"
+}: {
+  status: CommissionStatus;
+  journeyStage?: CommissionJourneyStage;
+  viewer?: CommissionStatusChipViewer;
+}) {
+  const activeCfg = journeyStage ? journeyCfg[journeyStage] ?? cfg[status] : cfg[status];
+  const Icon = activeCfg.icon;
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium", cfg[status].cls)}>
+    <span className={cn("inline-flex items-center gap-1 whitespace-nowrap rounded-full border-0 px-2 py-1 text-xs font-medium shadow-none", activeCfg.cls)}>
       <Icon className="h-3.5 w-3.5" />
-      {cfg[status].label}
+      {getStatusLabel(activeCfg.label, status, journeyStage, viewer)}
     </span>
   );
 }

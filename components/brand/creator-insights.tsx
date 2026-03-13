@@ -274,7 +274,7 @@ export function CreatorInsights({
                     <TableCell className="font-medium">{formatCurrency(c.amount, c.currency)}</TableCell>
                     <TableCell>{formatCurrency(orderValue, c.currency)}</TableCell>
                     <TableCell>{formatDate(c.conversionTimestamp)}</TableCell>
-                    <TableCell><CommissionStatusChip status={c.status} /></TableCell>
+                    <TableCell><CommissionStatusChip status={c.status} viewer="brand" /></TableCell>
                     <TableCell>{getAgeDays(c.conversionTimestamp)}d</TableCell>
                     <TableCell>{c.riskFlags?.[0] ?? "—"}</TableCell>
                   </TableRow>

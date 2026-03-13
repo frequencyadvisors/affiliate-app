@@ -1,5 +1,8 @@
 "use client";
 
+import { ShieldCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CommissionAuditLogDialog } from "@/components/commission-audit-log-dialog";
 import {
   BRAND_PROGRAMS_DATA,
   Commission,
@@ -8,8 +11,8 @@ import {
   formatDateTime,
   getAgeDays
 } from "@/lib/mock-data";
-import { getAttributionRecord } from "@/lib/verified-influence";
-import { CommissionStatusChip } from "@/components/commission-status-chip";
+import { getAttributionRecord, getReversalReasonCode, getValidationDaysRemaining } from "@/lib/verified-influence";
+import { CommissionAttributionPanel } from "@/components/commission-attribution-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -20,98 +23,64 @@ export function CommissionDetail({
   commission: Commission;
   onDispute: (id: string) => void;
 }) {
+  const preTransaction = ["link_clicked", "product_viewed", "added_to_cart", "checkout_started"].includes(commission.journeyStage);
   const customer = CUSTOMER_PROFILES[commission.orderId];
   const commissionRate = parseFloat(BRAND_PROGRAMS_DATA[commission.programName]?.commissionRate || "14");
   const estimatedOrderValue = commissionRate > 0 ? commission.amount / (commissionRate / 100) : commission.amount;
   const attribution = getAttributionRecord(commission);
-  const timelineItems = [
-    { label: "Creator Interaction", value: attribution.creatorInteraction },
-    { label: "Purchase Timestamp", value: attribution.purchaseTimestamp },
-    { label: "Session Continuity", value: attribution.sessionContinuity },
-    ...(attribution.clickTimestamp ? [{ label: "Click Timestamp", value: attribution.clickTimestamp }] : []),
-    { label: "Time to Purchase", value: attribution.timeToPurchase ?? "Unavailable" },
-    { label: "Creator Code", value: attribution.creatorCode }
-  ];
+  const daysRemaining = getValidationDaysRemaining(commission);
+  const reasonCode = getReversalReasonCode(commission);
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_360px]">
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="flex items-start justify-between gap-4 px-5 py-5">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h1 className="text-[22px] font-semibold leading-[22px] tracking-[-0.66px] text-[#04070f]">{commission.id}</h1>
-                <CommissionStatusChip status={commission.status} />
-              </div>
-              <p className="text-[12px] leading-4 text-[#ff6088]">
-                {attribution.state === "verified"
-                  ? "This commission looks secure"
-                  : attribution.state === "disputed"
-                    ? "This commission is contested"
-                    : "This commission still needs attribution"}
-              </p>
-            </div>
-            <div className="flex flex-wrap justify-end gap-2">
-              <InlineChip>{attribution.state}</InlineChip>
-              <InlineChip>{attribution.confidence} confidence</InlineChip>
-              <InlineChip>{attribution.buyerBehaviour}</InlineChip>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-[9px] px-[30px] py-[40px] text-center">
-            {timelineItems.map((item, index) => (
-              <div key={item.label} className="flex flex-col items-center gap-[9px]">
-                <div className="flex flex-col items-center gap-[6px]">
-                  <span className="h-[10px] w-[10px] rounded-full bg-[#ff6088]" />
-                  <div className="flex flex-col items-center">
-                    <p className="text-[12px] leading-4 text-[#525c63]">{item.label}</p>
-                    <p className="max-w-[420px] text-[16px] font-medium leading-6 text-[#04070f]">{item.value}</p>
-                  </div>
-                </div>
-                {index < timelineItems.length - 1 ? <div className="h-[33px] w-px bg-black/70" /> : null}
-              </div>
-            ))}
-          </div>
-
-          {attribution.conflictingSignal ? (
-            <div className="px-5 pb-5">
-              <div className="rounded-[14px] bg-[#fff0d9] px-[18px] py-[18px]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#7a3e00]">Why this is contested</p>
-                <p className="mt-2 text-[14px] leading-6 text-[#6d3900]">{attribution.conflictingSignal}</p>
-              </div>
-            </div>
-          ) : attribution.systemNote ? (
-            <div className="px-5 pb-5">
-              <div className="rounded-[14px] border border-black/10 bg-[#f7f9fb] px-[18px] py-[18px]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#525c63]">System Note</p>
-                <p className="mt-2 text-[14px] leading-6 text-[#04070f]/78">{attribution.systemNote}</p>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="grid border-t border-black/10 lg:grid-cols-2">
-            <div className="border-r border-black/10 px-[30px] py-[30px]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/52">Signals the system sees</p>
-              <ul className="mt-3 space-y-2">
-                {attribution.signals.map((signal) => (
-                  <li key={signal.label} className="flex gap-2 text-[14px] leading-6 text-[#04070f]">
-                    <span className="font-semibold">
-                      {signal.status === "positive" ? "✓" : signal.status === "warning" ? "⚠" : "✗"}
-                    </span>
-                    <span>{signal.label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="px-[30px] py-[30px]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/52">What this means for you</p>
-              <p className="mt-3 max-w-[260px] text-[14px] leading-6 text-[#04070f]/78">{attribution.systemConfidence}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <CommissionAttributionPanel
+        commission={commission}
+        attribution={attribution}
+        statusMessage={
+          attribution.state === "verified"
+            ? "This commission looks secure"
+            : attribution.state === "disputed"
+              ? "This commission is contested"
+              : "This commission still needs attribution"
+        }
+      />
 
       <div className="space-y-4">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Validation Snapshot</CardTitle></CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="rounded-lg border border-black/10 bg-[rgba(247,249,251,0.9)] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.48px] text-muted-foreground">Incrementality Marker</p>
+                  <p className="mt-1 font-semibold text-[#04070f]">{commission.customerType === "New" ? "New customer" : "Returning customer"}</p>
+                </div>
+                <Badge variant={commission.customerType === "New" ? "secondary" : "outline"}>
+                  {commission.customerType === "New" ? "Net-new value" : "Repeat-buyer review"}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Validation Window" value={`${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining`} />
+              <Field label="Attribution Rule" value={attribution.activeRule} />
+              <Field label="Commerce Ref" value={`Shopify ${commission.orderId}`} />
+              <Field label="Integrity" value={attribution.integritySummary.replace("Attribution Integrity: ", "")} />
+            </div>
+
+            <div className="rounded-lg border border-black/10 bg-[rgba(55,220,255,0.12)] p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-[#04070f]" />
+                <p className="text-[13px] leading-5 text-[#525c63]">
+                  This is the same rule set and audit evidence the brand sees, so disputes can be reviewed against a shared record.
+                </p>
+              </div>
+            </div>
+
+            <CommissionAuditLogDialog commission={commission} attribution={attribution} triggerClassName="w-full" />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader><CardTitle className="text-base">Commission Details</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-2 gap-3 text-sm">
@@ -142,7 +111,7 @@ export function CommissionDetail({
             <div className="grid grid-cols-2 gap-2 text-sm">
               <Field label="Purchased" value={customer?.purchased ?? commission.productCategory} />
               <Field label="Customer Type" value={commission.customerType} />
-              <Field label="Conversion Date" value={formatDateTime(commission.conversionTimestamp)} />
+              <Field label={preTransaction ? "Last Activity" : "Conversion Date"} value={formatDateTime(commission.conversionTimestamp)} />
               <Field label="Validation Window" value={`${commission.validationWindowDays} days`} />
             </div>
           </CardContent>
@@ -152,10 +121,12 @@ export function CommissionDetail({
           <Card>
             <CardHeader><CardTitle className="text-base">Dispute Action</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
+              <Field label="Reason Code" value={`${reasonCode.code} · ${reasonCode.label}`} />
               <Field label="Reason" value={commission.reversalReason || "Unknown"} />
               <Field label="Confidence" value={commission.reversalConfidence || "Unknown"} />
               <p className="text-sm text-muted-foreground">{commission.reversalNote || "No explanation provided."}</p>
               <Button className="w-full" onClick={() => onDispute(commission.id)}>Dispute This Reversal</Button>
+              <CommissionAuditLogDialog commission={commission} attribution={attribution} triggerClassName="w-full" />
             </CardContent>
           </Card>
         )}
@@ -170,13 +141,5 @@ function Field({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="font-medium">{value}</p>
     </div>
-  );
-}
-
-function InlineChip({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex rounded-full border border-black bg-white/80 px-[11px] py-[5px] text-[11px] font-medium capitalize text-[#04070f]">
-      {children}
-    </span>
   );
 }
