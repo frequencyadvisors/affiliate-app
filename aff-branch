@@ -1,0 +1,62 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+cd "$REPO_DIR"
+
+git fetch origin --prune
+
+typeset -a branch_entries
+while IFS= read -r branch; do
+  [[ -n "$branch" ]] || continue
+  branch_entries+=("$branch")
+done < <(
+  {
+    git for-each-ref --format='%(refname:short)' refs/heads
+    git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#^origin/##' | grep -vE '^(HEAD|origin)$'
+  } | awk '!seen[$0]++' | sort
+)
+
+if (( ${#branch_entries[@]} == 0 )); then
+  echo "No branches found."
+  exit 1
+fi
+
+echo "Available branches:"
+for (( i = 1; i <= ${#branch_entries[@]}; i++ )); do
+  printf "  %2d) %s\n" "$i" "${branch_entries[$i]}"
+done
+
+printf "Pick a branch number: "
+read -r selection
+
+if [[ ! "$selection" =~ '^[0-9]+$' ]] || (( selection < 1 || selection > ${#branch_entries[@]} )); then
+  echo "Invalid selection: $selection"
+  exit 1
+fi
+
+branch="${branch_entries[$selection]}"
+
+if git show-ref --verify --quiet "refs/heads/$branch"; then
+  git switch "$branch"
+elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+  git switch --track -c "$branch" "origin/$branch"
+else
+  echo "Branch not found locally or on origin: $branch"
+  exit 1
+fi
+
+upstream="$(git for-each-ref --format='%(upstream:short)' "refs/heads/$branch")"
+if [[ -n "$upstream" ]]; then
+  git pull --ff-only
+elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+  git pull --ff-only origin "$branch"
+else
+  echo "No upstream found for $branch. Skipping pull."
+fi
+
+rm -rf .next
+
+npm run dev
