@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { Bell, Building2, ChevronDown, ChevronUp, Grip, Settings, User } from "lucide-react";
-import { ViewSwitcher } from "@/components/view-switcher";
 import { BRAND_PROGRAMS_DATA, COMMISSIONS, getProgramHierarchyByProgramId, getProgramHierarchyByProgramName } from "@/lib/mock-data";
 import { AllProgramsGrid } from "@/components/brand/all-programs-grid";
 import { BrandProgramDetail } from "@/components/brand/brand-program-detail";
@@ -40,12 +39,55 @@ const navCommissionsIcon = "/assets/nav/brand/commissions.svg";
 const navDisputesIcon = "/assets/nav/brand/disputes.svg";
 const CONTENT_FADE_MS = 200;
 
+const shellTheme = {
+  "--background": "oklch(97.02% 0.0078 305)",
+  "--foreground": "oklch(21.03% 0.0078 305)",
+  "--card": "oklch(100% 0.0039 305)",
+  "--card-foreground": "oklch(21.03% 0.0078 305)",
+  "--muted": "oklch(55.17% 0.0156 305)",
+  "--muted-foreground": "oklch(55.17% 0.0156 305)",
+  "--border": "oklch(90% 0.0078 305)",
+  "--input": "oklch(100% 0.0039 305)",
+  "--primary": "oklch(77% 0.13 305)",
+  "--primary-foreground": "oklch(15% 0.026 305)",
+  "--ring": "oklch(77% 0.13 305)",
+  "--accent": "oklch(77% 0.13 305)",
+  "--accent-foreground": "oklch(15% 0.026 305)",
+  "--default": "oklch(94% 0.0078 305)",
+  "--default-foreground": "oklch(21.03% 0.0059 305)",
+  "--field-background": "oklch(100% 0.0039 305)",
+  "--field-foreground": "oklch(21.03% 0.0078 305)",
+  "--field-placeholder": "oklch(55.17% 0.0156 305)",
+  "--field-border": "oklch(92% 0.0078 305)",
+  "--surface": "oklch(100% 0.0039 305)",
+  "--surface-foreground": "oklch(21.03% 0.0078 305)",
+  "--surface-secondary": "oklch(95.24% 0.0062 305)",
+  "--surface-secondary-foreground": "oklch(21.03% 0.0078 305)",
+  "--surface-tertiary": "oklch(93.73% 0.0062 305)",
+  "--surface-tertiary-foreground": "oklch(21.03% 0.0078 305)",
+  "--overlay": "oklch(100% 0.0023 305)",
+  "--overlay-foreground": "oklch(21.03% 0.0078 305)",
+  "--scrollbar": "oklch(87.1% 0.0078 305)",
+  "--segment": "oklch(100% 0.0078 305)",
+  "--segment-foreground": "oklch(21.03% 0.0078 305)",
+  "--separator": "oklch(92% 0.0078 305)",
+  "--success": "oklch(73.29% 0.1965 156.95)",
+  "--success-foreground": "oklch(21.03% 0.0059 156.95)",
+  "--warning": "oklch(78.19% 0.161 78.47)",
+  "--warning-foreground": "oklch(21.03% 0.0059 78.47)",
+  "--danger": "oklch(65.32% 0.2364 31.88)",
+  "--danger-foreground": "oklch(99.11% 0 0)",
+  "--surface-shadow": "0 1px 2px rgba(15, 23, 42, 0.04), 0 16px 40px rgba(15, 23, 42, 0.08)",
+  "--overlay-shadow": "0 12px 36px rgba(15, 23, 42, 0.12)",
+  "--field-shadow": "0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.08)"
+} as CSSProperties & Record<string, string>;
+
 function navButton(active: boolean) {
   return [
-    "group flex h-10 w-full flex-col items-start overflow-hidden px-[13px] py-[5px] text-left",
+    "group flex h-11 w-full items-center overflow-hidden rounded-2xl border px-3 text-left transition-all duration-200",
     active
-      ? "border-l-4 border-black bg-[var(--nav)] hover:border-black/30"
-      : "bg-[var(--nav)] hover:bg-[var(--nav)]"
+      ? "border-[var(--border)] bg-white text-foreground shadow-[0_10px_30px_rgba(15,23,42,0.08)]"
+      : "border-transparent bg-transparent text-default-500 hover:border-[var(--border)] hover:bg-white/70 hover:text-foreground"
   ].join(" ");
 }
 
@@ -348,26 +390,27 @@ export function BrandShell({
   const intro = screenIntro();
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <aside className="flex h-full w-[226px] shrink-0 flex-col justify-between border-r-2 border-black bg-[var(--nav)]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(203,213,225,0.35),transparent_28%),radial-gradient(circle_at_top_right,rgba(192,132,252,0.12),transparent_24%),linear-gradient(180deg,rgba(248,250,252,1)_0%,rgba(242,244,248,1)_100%)] p-4 text-foreground">
+      <div className="flex min-h-[calc(100vh-2rem)] overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_24px_80px_rgba(15,23,42,0.08)]" style={shellTheme}>
+      <aside className="flex h-full w-[248px] shrink-0 flex-col justify-between border-r border-[var(--border)] bg-[var(--surface-secondary)]">
         <div className="flex min-h-px min-w-px flex-1 flex-col">
-          <div className="flex h-[60px] items-center border-b-2 border-black px-2">
-            <div className="flex h-9 items-center gap-2">
-              <div className="grid h-10 w-10 place-items-center rounded-[211.99px] bg-black">
+          <div className="flex h-[76px] items-center border-b border-[var(--border)] px-5">
+            <div className="flex h-10 items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--foreground)] shadow-[0_8px_24px_rgba(15,23,42,0.15)]">
                 <img src={brandEyeIcon} alt="" aria-hidden className="h-[16.34px] w-[31.052px]" />
               </div>
-              <img src={brandWordmark} alt="FREEQ" className="h-[21.624px] w-[94.947px]" />
+              <img src={brandWordmark} alt="FREEQ" className="h-[21.624px] w-[94.947px] opacity-90" />
             </div>
           </div>
 
-          <div className="flex min-h-px min-w-px flex-1 flex-col items-center justify-between py-[10px]">
-            <nav className="w-full text-sm">
+          <div className="flex min-h-px min-w-px flex-1 flex-col items-center justify-between px-4 py-4">
+            <nav className="w-full space-y-2 text-sm">
               <button className={navButton(isProgramsSectionActive)} onClick={() => transitionToScreen("all-programs", () => { setActiveProgram("all"); setActiveBusinessUnitId("all"); }, false, { program: "all", businessUnitId: "all" })}>
-                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
-                  <span className={["flex shrink-0 p-[5px]", isProgramsSectionActive ? "opacity-100" : "opacity-50"].join(" ")}>
+                <span className="flex w-full items-center gap-3">
+                  <span className={["flex shrink-0 rounded-xl bg-white p-2 shadow-sm", isProgramsSectionActive ? "opacity-100" : "opacity-70"].join(" ")}>
                     <img src={navAllProgramsIcon} alt="" aria-hidden className="h-5 w-5" />
                   </span>
-                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", isProgramsSectionActive ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center text-[14px] leading-[20px] tracking-[-0.01em]", isProgramsSectionActive ? "font-medium" : "font-normal"].join(" ")}>
                     All Programs
                   </span>
                 </span>
@@ -383,16 +426,16 @@ export function BrandShell({
                 <div
                   ref={programRailContentRef}
                   className={[
-                    "px-4 pb-3 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.87,0,0.13,1)] motion-reduce:transition-none",
+                    "px-2 pb-3 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.87,0,0.13,1)] motion-reduce:transition-none",
                     shouldShowProgramRailList ? "opacity-100 translate-y-0" : "-translate-y-1 opacity-0"
                   ].join(" ")}
                 >
-                  <div className="flex items-center justify-end px-2 py-1">
+                  <div className="flex items-center justify-end px-2 py-2">
                     {canExpandProgramRailList && (
                       <button
                         type="button"
                         onClick={() => setShowAllProgramsInRail((current) => !current)}
-                        className="inline-flex items-center gap-1 px-1 py-1 text-[11px] font-semibold text-[#04070f] transition-colors hover:text-[#04070f]/70"
+                        className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-default-500 transition-colors hover:bg-white hover:text-foreground"
                       >
                         {showAllProgramsInRail ? "Show less" : "See more"}
                         {showAllProgramsInRail ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -416,14 +459,14 @@ export function BrandShell({
                             }, true, { program: program.programName, businessUnitId: hierarchy?.program.businessUnitId ?? activeBusinessUnitId });
                           }}
                           className={[
-                            "flex w-full items-start justify-between gap-2 px-2 py-2 text-left transition-colors",
-                            isActive ? "text-[#04070f]" : "text-[#04070f]/70 hover:text-[#04070f]"
+                            "flex w-full items-start justify-between gap-3 rounded-2xl px-3 py-2 text-left transition-colors",
+                            isActive ? "bg-white text-foreground shadow-sm" : "text-default-500 hover:bg-white/75 hover:text-foreground"
                           ].join(" ")}
                         >
                           <div className="min-w-0">
                             <p className="truncate text-[13px] font-normal leading-[17px]">{program.programName}</p>
                           </div>
-                          <span className="shrink-0 text-[10px] font-semibold opacity-60">
+                          <span className="shrink-0 rounded-full bg-default-100 px-2 py-0.5 text-[10px] font-medium text-default-500">
                             {program.commissionCount}
                           </span>
                         </button>
@@ -433,63 +476,88 @@ export function BrandShell({
                 </div>
               </div>
               <button className={navButton(screen === "queue")} onClick={() => transitionToScreen("queue", () => { setActiveProgram("all"); setActiveBusinessUnitId("all"); }, false, { program: "all", businessUnitId: "all" })}>
-                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
-                  <span className={["flex shrink-0 p-[5px]", screen === "queue" ? "opacity-100" : "opacity-50"].join(" ")}>
+                <span className="flex w-full items-center gap-3">
+                  <span className={["flex shrink-0 rounded-xl bg-white p-2 shadow-sm", screen === "queue" ? "opacity-100" : "opacity-70"].join(" ")}>
                     <img src={navCommissionsIcon} alt="" aria-hidden className="h-5 w-5" />
                   </span>
-                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "queue" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center text-[14px] leading-[20px] tracking-[-0.01em]", screen === "queue" ? "font-medium" : "font-normal"].join(" ")}>
                     Commissions
                   </span>
                 </span>
               </button>
               <button className={navButton(screen === "disputes")} onClick={() => transitionToScreen("disputes")}>
-                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
-                  <span className={["flex shrink-0 p-[5px]", screen === "disputes" ? "opacity-100" : "opacity-50"].join(" ")}>
+                <span className="flex w-full items-center gap-3">
+                  <span className={["flex shrink-0 rounded-xl bg-white p-2 shadow-sm", screen === "disputes" ? "opacity-100" : "opacity-70"].join(" ")}>
                     <img src={navDisputesIcon} alt="" aria-hidden className="h-5 w-5" />
                   </span>
-                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "disputes" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center text-[14px] leading-[20px] tracking-[-0.01em]", screen === "disputes" ? "font-medium" : "font-normal"].join(" ")}>
                     Disputes
                   </span>
                 </span>
               </button>
               <button className={navButton(screen === "business-units")} onClick={() => transitionToScreen("business-units")}>
-                <span className="flex w-full items-center overflow-hidden rounded-[6px] transition-colors group-hover:bg-black/10">
-                  <span className={["flex shrink-0 p-[5px]", screen === "business-units" ? "opacity-100" : "opacity-50"].join(" ")}>
+                <span className="flex w-full items-center gap-3">
+                  <span className={["flex shrink-0 rounded-xl bg-white p-2 shadow-sm", screen === "business-units" ? "opacity-100" : "opacity-70"].join(" ")}>
                     <Building2 className="h-5 w-5" />
                   </span>
-                  <span className={["flex min-h-px min-w-px flex-1 items-center px-[5px] py-px text-[16px] leading-[22.857px] tracking-[-0.32px]", screen === "business-units" ? "font-semibold opacity-100" : "font-normal opacity-50"].join(" ")}>
+                  <span className={["flex min-h-px min-w-px flex-1 items-center text-[14px] leading-[20px] tracking-[-0.01em]", screen === "business-units" ? "font-medium" : "font-normal"].join(" ")}>
                     Businesses
                   </span>
                 </span>
               </button>
             </nav>
 
-            <div className="w-full" />
+            <div className="h-2 w-full" />
           </div>
         </div>
 
-        <div className="w-full pb-2">
-          <div className="px-3 pb-2">
-            <button className="flex w-full items-center gap-2 rounded-[6px] px-2 py-2 text-sm hover:bg-black/5"><Settings className="h-4 w-4" />Settings</button>
-          </div>
-          <div className="border-t px-3 pt-3 pb-3" style={{ borderTopColor: "rgba(0,0,0,0.10)" }}>
-            <ViewSwitcher
-              viewMode={viewMode}
-              onChange={(v) => {
-                setViewMode(v);
-                transitionToScreen("all-programs", () => {
-                  setActiveProgram("all");
-                  setActiveBusinessUnitId("all");
-                }, false, { program: "all", businessUnitId: "all" });
-              }}
-            />
+        <div className="w-full p-4">
+          <div className="space-y-3 rounded-[24px] border border-[var(--border)] bg-white/80 p-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur">
+            <button className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium text-default-500 transition-colors hover:bg-default-50 hover:text-foreground">
+              <Settings className="h-4 w-4" />
+              Settings
+            </button>
+            <div className="flex rounded-2xl border border-[var(--border)] bg-white p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode("brand");
+                  transitionToScreen("all-programs", () => {
+                    setActiveProgram("all");
+                    setActiveBusinessUnitId("all");
+                  }, false, { program: "all", businessUnitId: "all" });
+                }}
+                className={[
+                  "flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                  viewMode === "brand" ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm" : "text-default-500 hover:bg-default-50 hover:text-foreground"
+                ].join(" ")}
+              >
+                Brand
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode("publisher");
+                  transitionToScreen("all-programs", () => {
+                    setActiveProgram("all");
+                    setActiveBusinessUnitId("all");
+                  }, false, { program: "all", businessUnitId: "all" });
+                }}
+                className={[
+                  "flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                  viewMode === "publisher" ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm" : "text-default-500 hover:bg-default-50 hover:text-foreground"
+                ].join(" ")}
+              >
+                Creator
+              </button>
+            </div>
           </div>
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col bg-[var(--background)]">
-        <header className="flex h-[60px] shrink-0 items-center justify-between gap-2 border-b-2 border-black bg-[var(--background)] px-6 text-sm">
-          <div className="flex items-center gap-2 text-[15px]">
+      <main className="flex min-w-0 flex-1 flex-col bg-transparent">
+        <header className="flex h-[76px] shrink-0 items-center justify-between gap-4 border-b border-[var(--border)] bg-white/75 px-6 text-sm backdrop-blur">
+          <div className="flex min-w-0 items-center gap-2 text-[14px] text-default-500">
             {screen === "create-program" ? (
               <>
                 <span>New Program</span>
@@ -498,32 +566,35 @@ export function BrandShell({
               </>
             ) : (
               <>
-                <button className="hover:underline" onClick={() => transitionToScreen("all-programs", () => { setActiveProgram("all"); setActiveBusinessUnitId("all"); }, false, { program: "all", businessUnitId: "all" })}>Mr. Beast</button>
-                {screen === "all-programs" && <span>Overview</span>}
+                <button className="rounded-full px-2 py-1 text-foreground transition-colors hover:bg-default-50" onClick={() => transitionToScreen("all-programs", () => { setActiveProgram("all"); setActiveBusinessUnitId("all"); }, false, { program: "all", businessUnitId: "all" })}>Mr. Beast</button>
+                {screen === "all-programs" && <span className="text-default-400">Overview</span>}
               </>
             )}
             {screen !== "all-programs" && screen !== "create-program" &&
               crumbs.slice(1).map((c, i) => (
                 <div key={`${c.label}-${i}`} className="flex items-center gap-2">
-                  <span>/</span>
-                  <button className="hover:underline" onClick={c.onClick}>{c.label}</button>
+                  <span className="text-default-300">/</span>
+                  <button className="rounded-full px-2 py-1 text-foreground transition-colors hover:bg-default-50" onClick={c.onClick}>{c.label}</button>
                 </div>
               ))
             }
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-default-500">
             <FigmaCaptureButton />
-            <button className="relative">
+            <button className="relative rounded-full p-2 transition-colors hover:bg-default-50 hover:text-foreground">
               <Bell className="h-5 w-5" />
               <span
-                className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full border-2 text-[11px] font-semibold"
-                style={{ backgroundColor: "var(--primary)", borderColor: "var(--background)" }}
+                className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full border border-white bg-[var(--accent)] text-[10px] font-semibold text-[var(--accent-foreground)] shadow-sm"
               >
                 11
               </span>
             </button>
-            <User className="h-5 w-5" />
-            <Grip className="h-5 w-5" />
+            <button className="rounded-full p-2 transition-colors hover:bg-default-50 hover:text-foreground">
+              <User className="h-5 w-5" />
+            </button>
+            <button className="rounded-full p-2 transition-colors hover:bg-default-50 hover:text-foreground">
+              <Grip className="h-5 w-5" />
+            </button>
           </div>
         </header>
         <div ref={contentRef} className="flex-1 overflow-y-auto">
@@ -540,17 +611,17 @@ export function BrandShell({
                   ? "flex min-h-full w-full items-center justify-center px-8 py-8"
                   : screen === "program-detail" || screen === "all-programs" || screen === "creator-detail"
                     ? "w-full"
-                    : "mx-auto w-full max-w-[1180px] px-8 py-8"
+                    : "mx-auto w-full max-w-[1180px] px-6 py-8 lg:px-8"
               }
             >
               {intro && (
-                <div className="mb-[35px] flex h-[79.773px] w-full flex-col gap-2">
-                  <div className="flex h-[50px] items-center">
-                    <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[24px] tracking-[-0.2px] text-[#04070f]">
+                <div className="mb-8 flex w-full flex-col gap-2">
+                  <div className="flex items-center">
+                    <h1 className="text-4xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
                       {intro.title}
                     </h1>
                   </div>
-                  <p className="text-[16px] text-muted-foreground">{intro.subtitle}</p>
+                  <p className="max-w-2xl text-sm leading-6 text-default-500 sm:text-base">{intro.subtitle}</p>
                 </div>
               )}
               {screen === "all-programs" && (
@@ -612,6 +683,7 @@ export function BrandShell({
           </div>
         </div>
       </main>
+    </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@ export function ListSurface({ className, ...props }: React.HTMLAttributes<HTMLDi
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-[20px] border-2 border-black bg-white shadow-[6px_6px_0_0_black]",
+        "overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] shadow-[0_18px_50px_rgba(15,23,42,0.08)]",
         className
       )}
       {...props}
@@ -17,7 +17,7 @@ export function ListRowButton({ className, ...props }: React.ButtonHTMLAttribute
   return (
     <button
       className={cn(
-        "w-full rounded-[12px] border border-black/10 bg-[rgba(242,253,255,0.42)] px-4 py-3 text-left transition-colors hover:bg-[rgba(242,253,255,0.82)]",
+        "w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)]/70 px-4 py-3 text-left text-foreground shadow-sm transition-colors hover:bg-[var(--surface)]",
         className
       )}
       {...props}

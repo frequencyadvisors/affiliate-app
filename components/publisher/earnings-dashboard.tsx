@@ -1,16 +1,12 @@
 "use client";
 
-import { AlertTriangle, CircleDashed, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ChevronRight, CircleDashed, ShieldCheck } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useMemo, useState } from "react";
 import { COMMISSIONS, formatCurrency, formatDateTime, getAgeDays } from "@/lib/mock-data";
 import { AttributionState, getAttributionRecord, getAttributionSummary } from "@/lib/verified-influence";
 import { CommissionStatusChip } from "@/components/commission-status-chip";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListSurface } from "@/components/ui/list-surface";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Chip, Separator } from "@heroui/react";
 import { TABLE_PAGE_SIZE, useLazyTable } from "@/lib/use-lazy-table";
 
 const stateOrder: AttributionState[] = ["verified", "disputed", "unestablished"];
@@ -56,12 +52,35 @@ export function EarningsDashboard({
     { name: "", value: 86.3 },
     { name: "Jun", value: 88.9 }
   ];
+
   const scopedRows = programFilter === "all" ? COMMISSIONS : COMMISSIONS.filter((c) => c.programName === programFilter);
   const total = scopedRows.filter((c) => ["paid", "locked", "approved"].includes(c.status)).reduce((a, c) => a + c.amount, 0);
   const pending = scopedRows.filter((c) => ["pending", "recorded"].includes(c.status)).reduce((a, c) => a + c.amount, 0);
   const activePrograms = new Set(scopedRows.map((c) => c.programName)).size;
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      <section className="px-2">
+        <Card className="border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-3">
+              <Chip color="accent" variant="soft" size="sm">Publisher workspace</Chip>
+              <div className="space-y-2">
+                <h1 className="text-4xl font-semibold tracking-[-0.05em] text-foreground sm:text-5xl">Earnings</h1>
+                <p className="max-w-2xl text-sm leading-6 text-default-500 sm:text-base">
+                  Track commission performance, review attribution quality, and inspect payout movement without leaving the dashboard.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Chip variant="secondary" color="default">Programs {activePrograms}</Chip>
+              <Chip variant="soft" color="success">Paid {formatCurrency(total, "USD")}</Chip>
+              <Chip variant="soft" color="warning">Review {formatCurrency(pending, "USD")}</Chip>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
       <section className="px-2">
         <EarningsPerformanceSection
           chartData={chartData}
@@ -69,13 +88,17 @@ export function EarningsDashboard({
           total={total}
           pending={pending}
           activePrograms={activePrograms}
-          unified={true}
+          unified
         />
       </section>
-      <div className="mb-6">
+
+      <section className="px-2">
         <EarningsInfluenceSummaryGrid rows={scopedRows} />
-      </div>
-      <EarningsActivityPanel rows={scopedRows} onOpenCommission={onOpenCommission} showProductColumn showOrderValueColumn />
+      </section>
+
+      <section className="px-2">
+        <EarningsActivitySection rows={scopedRows} onOpenCommission={onOpenCommission} showProductColumn showOrderValueColumn />
+      </section>
     </div>
   );
 }
@@ -95,95 +118,62 @@ export function EarningsPerformanceSection({
   activePrograms: number;
   unified?: boolean;
 }) {
-  if (unified) {
-    return (
-      <Card className="overflow-hidden rounded-[20px]">
-        <CardContent className="p-0">
-          <div className={cn("grid", showTopStats ? "md:grid-cols-4" : "md:grid-cols-3")}>
-            <UnifiedStat title="Total Earned" value={formatCurrency(total, "USD")} />
-            <UnifiedStat title="In Review" value={formatCurrency(pending, "USD")} withDivider />
-            <UnifiedStat title="Conversion Rate" value="6.4%" withDivider />
-            {showTopStats && <UnifiedStat title="Active Programs" value={`${activePrograms}`} withDivider />}
-          </div>
-          <div className="border-t border-black/20 px-5 py-5">
-            <h3 className="text-[16px] font-semibold tracking-[-0.4px] text-[#04070f]">Earnings Trend</h3>
-            <div className="mt-6 h-[232px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 2, right: 6, left: -18, bottom: 2 }}>
-                  <CartesianGrid stroke="#d7dbe0" strokeDasharray="2 6" vertical={false} />
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#7a8289" }} />
-                  <YAxis domain={[75, 89]} ticks={[75, 82, 89]} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#7a8289" }} />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#1b1d22"
-                    strokeWidth={3}
-                    dot={(props) => (
-                      <circle
-                        cx={props.cx}
-                        cy={props.cy}
-                        r={4.5}
-                        fill="#ffffff"
-                        stroke="#1b1d22"
-                        strokeWidth={3}
-                      />
-                    )}
-                    activeDot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const stats = [
+    { title: "Total earned", value: formatCurrency(total, "USD") },
+    { title: "In review", value: formatCurrency(pending, "USD") },
+    { title: "Conversion rate", value: "6.4%" },
+    ...(showTopStats ? [{ title: "Active programs", value: `${activePrograms}` }] : [])
+  ];
 
   return (
-    <>
-      {showTopStats && !unified && (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Stat title="Total Earned" value={formatCurrency(total, "USD")} />
-          <Stat title="In Review" value={formatCurrency(pending, "USD")} />
-          <Stat title="Conversion Rate" value="6.4%" />
-          <Stat title="Active Programs" value={`${activePrograms}`} />
+    <Card className="overflow-hidden border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <CardContent className="p-0">
+        <div className={`grid gap-0 ${showTopStats ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+          {stats.map((stat, index) => (
+            <UnifiedStat key={stat.title} title={stat.title} value={stat.value} withDivider={index !== 0} />
+          ))}
         </div>
-      )}
 
-      <Card>
-        <CardHeader className="px-6 pb-2 pt-6"><CardTitle className="text-base">Earnings Trend</CardTitle></CardHeader>
-        <CardContent className="h-64 px-6 pb-4 pt-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 6, right: 8, left: -12, bottom: 0 }}>
-              <CartesianGrid stroke="#d7dbe0" strokeDasharray="3 5" vertical={false} />
-              <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#7a8289" }} />
-              <YAxis domain={[75, 89]} ticks={[75, 82, 89]} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#7a8289" }} />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#1b1d22"
-                strokeWidth={3}
-                dot={(props) => {
-                  return (
+        <Separator />
+
+        <div className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold tracking-[-0.03em] text-foreground">Earnings trend</h3>
+              <p className="text-sm text-default-500">Weekly movement across the current publisher portfolio.</p>
+            </div>
+            <Chip variant="soft" color="accent" size="sm">Last 6 months</Chip>
+          </div>
+          <div className="mt-5 h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 2, right: 6, left: -18, bottom: 2 }}>
+                <CartesianGrid stroke="rgba(148, 163, 184, 0.2)" strokeDasharray="2 6" vertical={false} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#7c8192" }} />
+                <YAxis domain={[75, 89]} ticks={[75, 82, 89]} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#7c8192" }} />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#a855f7"
+                  strokeWidth={3}
+                  dot={(props) => (
                     <circle
                       cx={props.cx}
                       cy={props.cy}
                       r={4.5}
                       fill="#ffffff"
-                      stroke="#1b1d22"
+                      stroke="#a855f7"
                       strokeWidth={3}
                     />
-                  );
-                }}
-                activeDot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-    </>
+                  )}
+                  activeDot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -207,196 +197,136 @@ export function EarningsActivitySection({
   showOrderIdColumn?: boolean;
 }) {
   const sortedRows = [...rows].sort((a, b) => +new Date(b.conversionTimestamp) - +new Date(a.conversionTimestamp));
-  const attributionById = useMemo(
-    () => new Map(sortedRows.map((row) => [row.id, getAttributionRecord(row)])),
-    [sortedRows]
-  );
-  const columnCount = 4 + Number(showProgramColumn) + Number(showProductColumn) + Number(showOrderValueColumn) + Number(showOrderIdColumn);
+  const attributionById = useMemo(() => new Map(sortedRows.map((row) => [row.id, getAttributionRecord(row)])), [sortedRows]);
   const { visibleCount, hasMore, loadMore, sentinelRef } = useLazyTable(sortedRows.length);
   const visibleRows = sortedRows.slice(0, visibleCount);
+  const [activeCommissionTab, setActiveCommissionTab] = useState<CommissionTab>("all");
+  const summary = useMemo(() => getAttributionSummary(rows), [rows]);
+  const filteredRows = activeCommissionTab === "all" ? rows : rows.filter((commission) => getAttributionRecord(commission).state === activeCommissionTab);
+  const filteredSummary = useMemo(() => {
+    if (activeCommissionTab === "all") {
+      return {
+        conversions: rows.length,
+        revenue: summary.verified.revenue + summary.disputed.revenue + summary.unestablished.revenue,
+        commission: summary.verified.commission + summary.disputed.commission + summary.unestablished.commission
+      };
+    }
+    return {
+      conversions: summary[activeCommissionTab].conversions,
+      revenue: summary[activeCommissionTab].revenue,
+      commission: summary[activeCommissionTab].commission
+    };
+  }, [activeCommissionTab, rows.length, summary, rows]);
+  const gridColumns = [
+    "minmax(180px, 1.1fr)",
+    showProductColumn ? "minmax(160px, 1fr)" : null,
+    "minmax(150px, 0.9fr)",
+    showOrderValueColumn ? "minmax(130px, 0.85fr)" : null,
+    showOrderIdColumn ? "minmax(140px, 0.95fr)" : null,
+    showProgramColumn ? "minmax(160px, 1fr)" : null,
+    "minmax(140px, 0.9fr)",
+    "minmax(80px, 0.6fr)"
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <ListSurface className="overflow-hidden rounded-[20px] border-2 border-black shadow-[3px_3px_0px_0px_black]">
-      {showHeader && (
-        <div className="px-6 pt-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <Card className="border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <CardHeader className="gap-4 px-6 pt-6">
+        {showHeader && (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.78px] text-[#04070f]/54">
-                Earnings Activity
-              </p>
-              <h2 className="text-[28px] font-semibold leading-none tracking-[-1.12px] text-[#04070f]">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">Earnings activity</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-foreground">
                 Conversion movement across your commissions
               </h2>
             </div>
-            <p className="text-[12px] leading-[18px] text-[#04070f]/64">
-              {sortedRows.length} records · newest activity first
-            </p>
+            <p className="text-sm text-default-500">{sortedRows.length} records · newest activity first</p>
           </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          <FilterPill active={activeCommissionTab === "all"} onClick={() => setActiveCommissionTab("all")}>
+            All Commissions {rows.length}
+          </FilterPill>
+          {stateOrder.map((state) => (
+            <FilterPill key={state} active={activeCommissionTab === state} onClick={() => setActiveCommissionTab(state)}>
+              {state === "verified" ? "Verified" : state === "disputed" ? "Disputed" : "Un-established"} {summary[state].conversions}
+            </FilterPill>
+          ))}
         </div>
-      )}
-      <div className={showHeader ? "pt-5" : ""}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Journey</TableHead>
-              {showProductColumn && <TableHead>Product</TableHead>}
-              <TableHead>Commission Amount</TableHead>
-              {showOrderValueColumn && <TableHead>Order Value</TableHead>}
-              {showOrderIdColumn && <TableHead>Order ID</TableHead>}
-              {showProgramColumn && <TableHead>Programme</TableHead>}
-              <TableHead>Date</TableHead>
-              <TableHead>Age</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {visibleRows.map((c) => (
-              <TableRow key={c.id} className="cursor-pointer" onClick={() => onOpenCommission(c.id)}>
-                <TableCell>
-                  <CommissionStatusChip status={c.status} journeyStage={c.journeyStage} />
-                </TableCell>
-                {showProductColumn && <TableCell>{attributionById.get(c.id)?.product ?? c.productCategory}</TableCell>}
-                <TableCell className="font-medium">{formatCurrency(c.amount, c.currency)}</TableCell>
-                {showOrderValueColumn && <TableCell className="font-medium">{attributionById.get(c.id)?.orderValue ?? formatCurrency(c.amount, c.currency)}</TableCell>}
-                {showOrderIdColumn && <TableCell className="font-medium">{c.orderId}</TableCell>}
-                {showProgramColumn && <TableCell>{c.programName}</TableCell>}
-                <TableCell>{formatDateTime(c.conversionTimestamp)}</TableCell>
-                <TableCell>{getAgeDays(c.conversionTimestamp)}d</TableCell>
-              </TableRow>
-            ))}
-            {hasMore && (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={columnCount} className="px-4 py-4">
-                  <div className="flex flex-col items-center gap-3">
-                    <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />
-                    <Card className="border-none p-0 shadow-none">
-                      <button
-                        type="button"
-                        onClick={loadMore}
-                        className="rounded-[11px] border-2 border-black bg-[var(--muted)] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-[#04070f] shadow-[2px_2px_0px_0px_black] transition active:translate-x-[1px] active:translate-y-[1px]"
-                      >
-                        Load 20 more commissions
-                      </button>
-                    </Card>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-            {sortedRows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={columnCount} className="px-6 py-10 text-center text-sm text-[#04070f]/56">
-                  {emptyMessage}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      {sortedRows.length > TABLE_PAGE_SIZE && (
-        <div className="px-6 pb-6 pt-3 text-[12px] leading-[18px] text-[#04070f]/56">
-          Showing {visibleRows.length} of {sortedRows.length} commissions
-        </div>
-      )}
-    </ListSurface>
-  );
-}
+      </CardHeader>
 
-export function EarningsActivityPanel({
-  rows,
-  onOpenCommission,
-  emptyMessage = "No commission activity yet.",
-  showProgramColumn = true,
-  showProductColumn = false,
-  showOrderValueColumn = false,
-  showOrderIdColumn = true
-}: {
-  rows: typeof COMMISSIONS;
-  onOpenCommission: (id: string) => void;
-  emptyMessage?: string;
-  showProgramColumn?: boolean;
-  showProductColumn?: boolean;
-  showOrderValueColumn?: boolean;
-  showOrderIdColumn?: boolean;
-}) {
-  const [activeCommissionTab, setActiveCommissionTab] = useState<CommissionTab>("all");
-  const summary = useMemo(() => getAttributionSummary(rows), [rows]);
-  const totalRevenue = summary.verified.revenue + summary.disputed.revenue + summary.unestablished.revenue;
-  const totalCommission = summary.verified.commission + summary.disputed.commission + summary.unestablished.commission;
-  const filteredRows =
-    activeCommissionTab === "all"
-      ? rows
-      : rows.filter((commission) => getAttributionRecord(commission).state === activeCommissionTab);
-  const activeSummary =
-    activeCommissionTab === "all"
-      ? {
-          conversions: rows.length,
-          revenue: totalRevenue,
-          commission: totalCommission
-        }
-      : {
-          conversions: summary[activeCommissionTab].conversions,
-          revenue: summary[activeCommissionTab].revenue,
-          commission: summary[activeCommissionTab].commission
-        };
-
-  return (
-    <section className="border-t border-black/20 pt-[26px]">
-      <div className="space-y-4 px-2 pb-2">
-        <Tabs value={activeCommissionTab} onValueChange={(value) => setActiveCommissionTab(value as CommissionTab)}>
-          <TabsList className="h-auto flex-wrap gap-2 rounded-[16px] bg-transparent p-0">
-            <TabsTrigger
-              value="all"
-              className="rounded-[11px] border-2 border-black bg-[var(--muted)] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-[#04070f] shadow-[2px_2px_0px_0px_black] transition active:translate-x-[1px] active:translate-y-[1px]"
-              activeClassName="rounded-[11px] border-2 border-black bg-[#04070f] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-white shadow-[2px_2px_0px_0px_black]"
-              inactiveClassName="hover:bg-[#c8f4ff]"
-            >
-              All Commissions
-              <span className="ml-2 text-[12px] opacity-72">{rows.length}</span>
-            </TabsTrigger>
-            {stateOrder.map((state) => (
-              <TabsTrigger
-                key={state}
-                value={state}
-                className="rounded-[11px] border-2 border-black bg-[var(--muted)] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-[#04070f] shadow-[2px_2px_0px_0px_black] transition active:translate-x-[1px] active:translate-y-[1px]"
-                activeClassName="rounded-[11px] border-2 border-black bg-[#04070f] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-white shadow-[2px_2px_0px_0px_black]"
-                inactiveClassName="hover:bg-[#c8f4ff]"
-              >
-                {state === "verified" ? "Verified" : state === "disputed" ? "Disputed" : "Un-established"}
-                <span className="ml-2 text-[12px] opacity-72">{summary[state].conversions}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
-        <p className="pt-8 text-[21px] font-semibold leading-none tracking-[-0.84px] text-[#04070f] sm:text-[24px]">
-          {activeSummary.conversions} conversions · {formatCurrency(activeSummary.revenue, "USD")} revenue ·{" "}
-          {formatCurrency(activeSummary.commission, "USD")} commission
+      <CardContent className="space-y-5 px-6 pb-6 pt-0">
+        <Separator />
+        <p className="text-lg font-semibold tracking-[-0.03em] text-foreground">
+          {filteredSummary.conversions} conversions · {formatCurrency(filteredSummary.revenue, "USD")} revenue · {formatCurrency(filteredSummary.commission, "USD")} commission
         </p>
 
-        <EarningsActivitySection
-          rows={filteredRows}
-          onOpenCommission={onOpenCommission}
-          showHeader={false}
-          emptyMessage={emptyMessage}
-          showProgramColumn={showProgramColumn}
-          showProductColumn={showProductColumn}
-          showOrderValueColumn={showOrderValueColumn}
-          showOrderIdColumn={showOrderIdColumn}
-        />
-      </div>
-    </section>
+        <div className="rounded-3xl border border-default-200 bg-background/90">
+          <div className="grid gap-4 border-b border-default-200 bg-default-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-default-500" style={{ gridTemplateColumns: gridColumns }}>
+            <span>Journey</span>
+            {showProductColumn && <span>Product</span>}
+            <span>Commission</span>
+            {showOrderValueColumn && <span>Order value</span>}
+            {showOrderIdColumn && <span>Order ID</span>}
+            {showProgramColumn && <span>Programme</span>}
+            <span>Date</span>
+            <span>Age</span>
+          </div>
+
+          <div className="divide-y divide-default-200">
+            {visibleRows.length === 0 && <div className="px-6 py-10 text-center text-sm text-default-500">{emptyMessage}</div>}
+
+            {visibleRows.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => onOpenCommission(c.id)}
+                className="grid w-full gap-4 px-4 py-4 text-left transition-colors hover:bg-default-50/80"
+                style={{ gridTemplateColumns: gridColumns }}
+              >
+                <div className="flex items-center">
+                  <CommissionStatusChip status={c.status} journeyStage={c.journeyStage} />
+                </div>
+                {showProductColumn && <div className="text-sm text-foreground">{attributionById.get(c.id)?.product ?? c.productCategory}</div>}
+                <div className="text-sm font-medium text-foreground">{formatCurrency(c.amount, c.currency)}</div>
+                {showOrderValueColumn && <div className="text-sm text-foreground">{attributionById.get(c.id)?.orderValue ?? formatCurrency(c.amount, c.currency)}</div>}
+                {showOrderIdColumn && <div className="text-sm text-default-600">{c.orderId}</div>}
+                {showProgramColumn && <div className="text-sm text-default-600">{c.programName}</div>}
+                <div className="text-sm text-default-600">{formatDateTime(c.conversionTimestamp)}</div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-default-600">{getAgeDays(c.conversionTimestamp)}d</span>
+                  <ChevronRight className="h-4 w-4 text-default-300" />
+                </div>
+              </button>
+            ))}
+
+            {hasMore && (
+              <div className="flex flex-col items-center gap-3 px-4 py-5">
+                <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />
+                <Button variant="secondary" onClick={loadMore}>
+                  Load 20 more commissions
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {sortedRows.length > TABLE_PAGE_SIZE && (
+          <p className="text-sm text-default-500">Showing {visibleRows.length} of {sortedRows.length} commissions</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
-export function EarningsInfluenceSummaryGrid({
-  rows
-}: {
-  rows: typeof COMMISSIONS;
-}) {
+export function EarningsInfluenceSummaryGrid({ rows }: { rows: typeof COMMISSIONS }) {
   const summary = useMemo(() => getAttributionSummary(rows), [rows]);
   const totalConversions = rows.length;
 
   return (
-    <section className="px-2">
+    <section>
       <div className="grid gap-4 md:grid-cols-3">
         <InfluenceSummaryCard
           label="Verified Influence"
@@ -427,31 +357,38 @@ export function EarningsInfluenceSummaryGrid({
   );
 }
 
+function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "rounded-full px-4 py-2 text-sm font-medium transition",
+        active ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm" : "bg-default-100 text-default-500 hover:bg-default-200"
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
 function Stat({ title, value }: { title: string; value: string }) {
   return (
-    <Card className="h-[160px]">
+    <Card className="h-[160px] border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <CardContent className="flex h-full flex-col justify-between p-[22px]">
-        <p className="whitespace-nowrap text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#ff6088]">{title}</p>
-        <p className="text-[45px] font-semibold leading-[35px] tracking-[-0.2px] text-[#04070f]">{value}</p>
+        <p className="whitespace-nowrap text-xs font-medium uppercase tracking-[0.24em] text-default-500">{title}</p>
+        <p className="text-[40px] font-semibold leading-none tracking-[-0.05em] text-foreground">{value}</p>
       </CardContent>
     </Card>
   );
 }
 
-function UnifiedStat({
-  title,
-  value,
-  withDivider = false
-}: {
-  title: string;
-  value: string;
-  withDivider?: boolean;
-}) {
+function UnifiedStat({ title, value, withDivider = false }: { title: string; value: string; withDivider?: boolean }) {
   return (
-    <div className={withDivider ? "border-l border-black/20" : ""}>
+    <div className={withDivider ? "border-l border-default-200" : ""}>
       <div className="flex h-[160px] flex-col justify-between p-[22px]">
-        <p className="whitespace-nowrap text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">{title}</p>
-        <p className="text-[45px] font-semibold leading-[35px] tracking-[-0.2px] text-[#04070f]">{value}</p>
+        <p className="whitespace-nowrap text-xs font-medium uppercase tracking-[0.24em] text-default-500">{title}</p>
+        <p className="text-[40px] font-semibold leading-none tracking-[-0.05em] text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -474,39 +411,39 @@ function InfluenceSummaryCard({
 }) {
   return (
     <div
-      className={cn(
-        "rounded-[18px] border-2 p-5 shadow-[3px_3px_0px_0px_black]",
+      className={[
+        "rounded-3xl border p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]",
         state === "verified"
-          ? "border-[#0f6d45] bg-[#effcf4]"
+          ? "border-emerald-200 bg-emerald-50/70"
           : state === "disputed"
-            ? "border-[#9a4d00] bg-[#fff5e7]"
-            : "border-[#73808c] bg-[#f6f8fa]"
-      )}
+            ? "border-amber-200 bg-amber-50/70"
+            : "border-slate-200 bg-slate-50/70"
+      ].join(" ")}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/52">{label}</p>
-          <p className="mt-3 text-[30px] font-semibold leading-none tracking-[-1.2px] text-[#04070f]">{percent}%</p>
-          <p className="mt-1 text-[13px] text-[#04070f]/64">{conversions} conversions</p>
+          <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">{label}</p>
+          <p className="mt-3 text-[32px] font-semibold leading-none tracking-[-0.05em] text-foreground">{percent}%</p>
+          <p className="mt-1 text-sm text-default-500">{conversions} conversions</p>
         </div>
-        <div className="grid h-[34px] w-[34px] place-items-center rounded-full border border-black bg-white/75">
+        <div className="grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/80">
           {state === "verified" ? (
-            <ShieldCheck className="h-4 w-4 text-[#55606c]" />
+            <ShieldCheck className="h-4 w-4 text-emerald-500" />
           ) : state === "disputed" ? (
-            <AlertTriangle className="h-4 w-4 text-[#55606c]" />
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
           ) : (
-            <CircleDashed className="h-4 w-4 text-[#55606c]" />
+            <CircleDashed className="h-4 w-4 text-slate-400" />
           )}
         </div>
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-3 border-t border-black/12 pt-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 border-t border-white/70 pt-4">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/50">Revenue</p>
-          <p className="mt-1 text-[18px] font-semibold text-[#04070f]">{formatCurrency(revenue, "USD")}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">Revenue</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(revenue, "USD")}</p>
         </div>
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/50">Commission</p>
-          <p className="mt-1 text-[18px] font-semibold text-[#04070f]">{formatCurrency(commission, "USD")}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">Commission</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(commission, "USD")}</p>
         </div>
       </div>
     </div>

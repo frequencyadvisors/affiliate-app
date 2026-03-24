@@ -3,6 +3,7 @@
 import { BadgeDollarSign, Clock, ShieldCheck, Users } from "lucide-react";
 import type { ComponentType } from "react";
 import { useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip, Separator } from "@heroui/react";
 import { BrandProgramData, COMMISSIONS, CREATOR_PROFILES, formatCurrency } from "@/lib/mock-data";
 import { CommissionQueue } from "@/components/brand/commission-queue";
 
@@ -33,128 +34,141 @@ export function BrandProgramDetail({
   ).sort((a, b) => b.total - a.total);
 
   return (
-    <div className="relative grid min-h-[calc(100vh-60px)] grid-cols-1 xl:grid-cols-[minmax(0,1fr)_404px]">
-      <div className="pointer-events-none absolute right-[404px] top-0 hidden h-full w-[2px] bg-black xl:block" />
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 xl:grid xl:grid-cols-[minmax(0,1fr)_384px]">
+      <section className="space-y-6">
+        <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-5 p-6 sm:p-8">
+            <div className="flex flex-col gap-4">
+              <Chip color="accent" variant="soft" size="sm" className="w-fit">
+                Program overview
+              </Chip>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">{program.programName}</h1>
+                <CardDescription className="max-w-3xl text-default-500">
+                  Review commission flow, creator participation, and program-level reliability in a lighter HeroUI dashboard surface.
+                </CardDescription>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Metric label="Approval rate" value={program.trustSummary.approvalRate} icon={ShieldCheck} />
+              <Metric label="Avg payout" value={program.trustSummary.avgPayout} icon={BadgeDollarSign} />
+              <Metric label="Validation" value={program.validationWindow} icon={Clock} />
+            </div>
+          </CardHeader>
+        </Card>
 
-      <section className="space-y-6 px-8 py-8 xl:pr-6">
-        <div className="space-y-[18px] px-2 pb-4 pt-1">
-          <div className="space-y-1">
-            <h1 className="text-[50px] font-semibold leading-none tracking-[-1px] text-[#04070f]">{program.programName}</h1>
-          </div>
-        </div>
-
-        <CommissionQueue
-          programFilter={program.programName}
-          onOpenCommission={onOpenCommission}
-          idColumnLabel="ID"
-          showHeader={false}
-          showReliabilityEyebrow={false}
-          showRecordsIntro={false}
-          showFilteredSummaryCard={false}
-          showOverallSummaryLine
-        />
+        <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-2 p-6">
+            <CardTitle className="text-lg tracking-[-0.02em]">Programme commissions</CardTitle>
+            <CardDescription className="text-default-500">
+              Program filtered commission queue with the same review and action behavior.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 pb-2">
+            <CommissionQueue
+              programFilter={program.programName}
+              onOpenCommission={onOpenCommission}
+              idColumnLabel="ID"
+              showHeader={false}
+              showReliabilityEyebrow={false}
+              showRecordsIntro={false}
+              showFilteredSummaryCard={false}
+              showOverallSummaryLine
+            />
+          </CardContent>
+        </Card>
       </section>
 
-      <aside className="border-t-2 border-black xl:sticky xl:top-0 xl:self-start xl:border-t-0">
-        <div className="grid grid-cols-2 border-b-2 border-black">
-          <SidebarMetric className="border-b border-r border-[#04070f]/20" icon={ShieldCheck} label="Approval Rate" value={program.trustSummary.approvalRate} />
-          <SidebarMetric className="border-b border-[#04070f]/20" icon={BadgeDollarSign} label="Avg Payout" value={program.trustSummary.avgPayout} />
-          <SidebarMetric className="border-r border-[#04070f]/20" icon={Users} label="Active Publishers" value={program.trustSummary.activePublishers} />
-          <SidebarMetric icon={Clock} label="Validation" value={program.validationWindow} />
-        </div>
-
-        <section className="border-b border-[#04070f]/20 px-6 py-6">
-          <h2 className="text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">Program Terms</h2>
-          <div className="mt-4 grid grid-cols-2 gap-1.5 text-sm">
+      <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+        <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-2 p-6">
+            <CardTitle className="text-lg">Program terms</CardTitle>
+            <CardDescription className="text-default-500">The commercial shape of this program.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 px-6 pb-6 sm:grid-cols-2">
             <TermCard label="Commission" value={`${program.commissionRate} ${program.commissionType}`} />
             <TermCard label="Attribution" value={program.attributionModel} />
             <TermCard label="Validation" value={program.validationWindow} />
             <TermCard label="Dispute Window" value={program.disputeWindow} />
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section className="border-b border-[#04070f]/20 px-6 py-6">
-          <h2 className="text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">Attribution Policy</h2>
-          <div className="mt-4 space-y-3">
+        <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-2 p-6">
+            <CardTitle className="text-lg">Attribution policy</CardTitle>
+            <CardDescription className="text-default-500">How commissions are explained and challenged.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 px-6 pb-6">
             <PolicyNote label="Explanation Commitment" value={program.explanationCommitment} />
             <PolicyNote label="Evidence Note" value={program.explanationNote} />
             <PolicyNote label="Cookie Window" value={program.cookieWindow} />
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section className="px-4 py-5">
-          <h2 className="text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">Participating Creators</h2>
-          <div className="mt-4 space-y-2">
-            {participatingCreators.length === 0 && <p className="text-sm text-muted-foreground">No creators enrolled yet.</p>}
+        <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-2 p-6">
+            <CardTitle className="text-lg">Participating creators</CardTitle>
+            <CardDescription className="text-default-500">Creators currently driving commissions in this program.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 px-6 pb-6">
+            {participatingCreators.length === 0 && <p className="text-sm text-default-500">No creators enrolled yet.</p>}
             {participatingCreators.map((creator) => (
               <button
                 type="button"
                 key={creator.name}
                 onClick={() => onOpenCreator(creator.name)}
-                className="flex w-full items-center justify-between rounded-[8px] bg-[rgba(242,253,255,0.3)] px-3 py-2.5 text-left transition-colors hover:bg-[rgba(242,253,255,0.6)]"
+                className="flex w-full items-center justify-between rounded-2xl border border-default-200 bg-background/80 px-4 py-3 text-left transition-colors hover:bg-default-50"
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <img
                     alt={creator.name}
-                    className="h-9 w-9 rounded-full border border-black/10 object-cover"
+                    className="h-10 w-10 rounded-full object-cover"
                     src={CREATOR_PROFILES[creator.name]?.avatar ?? "https://i.pravatar.cc/80"}
                   />
                   <div>
-                    <p className="text-[14px] font-medium leading-[18px] text-[#04070f]">{creator.name}</p>
-                    <p className="text-[12px] leading-[16px] text-muted-foreground">
-                      {CREATOR_PROFILES[creator.name]?.handle ?? "@creator"}
-                    </p>
+                    <p className="text-sm font-medium text-foreground">{creator.name}</p>
+                    <p className="text-xs text-default-500">{CREATOR_PROFILES[creator.name]?.handle ?? "@creator"}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[12px] leading-[16px] text-muted-foreground">{creator.commissions} commissions</p>
-                  <p className="text-[13px] font-medium leading-[18px] text-[#04070f]">{formatCurrency(creator.total, "USD")}</p>
+                  <p className="text-xs text-default-500">{creator.commissions} commissions</p>
+                  <p className="text-sm font-medium text-foreground">{formatCurrency(creator.total, "USD")}</p>
                 </div>
               </button>
             ))}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       </aside>
     </div>
   );
 }
 
-function SidebarMetric({
-  className,
-  icon: Icon,
-  label,
-  value
-}: {
-  className?: string;
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
+function Metric({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
-    <div className={`min-h-[153px] p-5 ${className ?? ""}`}>
-      <div className="mb-1.5 flex items-center justify-between gap-2">
-        <p className="text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">{label}</p>
-        <Icon className="h-4 w-4" />
+    <div className="rounded-2xl border border-default-200 bg-background/80 p-4">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-default-500">{label}</p>
+        <Icon className="h-4 w-4 text-default-500" />
       </div>
-      <p className="text-[35px] font-semibold leading-[35px] tracking-[-0.2px] text-[#04070f]">{value}</p>
+      <p className="text-2xl font-semibold tracking-[-0.04em] text-foreground">{value}</p>
     </div>
   );
 }
 
 function TermCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[6px] bg-[rgba(55,220,255,0.3)] px-3 py-2.5">
-      <p className="text-[14px] font-normal leading-[16px] text-[#525c63]">{label}</p>
-      <p className="mt-1 text-[16px] font-medium leading-[20px] text-[#04070f]">{value}</p>
+    <div className="rounded-2xl border border-default-200 bg-default-50/70 px-4 py-3">
+      <p className="text-xs font-medium uppercase tracking-[0.22em] text-default-500">{label}</p>
+      <p className="mt-2 text-sm font-medium leading-6 text-foreground">{value}</p>
     </div>
   );
 }
 
 function PolicyNote({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[10px] border border-black/10 bg-[rgba(242,253,255,0.45)] px-3 py-3">
-      <p className="text-[12px] uppercase tracking-[0.72px] text-[#04070f]/50">{label}</p>
-      <p className="mt-1 text-[14px] leading-5 text-[#04070f]">{value}</p>
+    <div className="rounded-2xl border border-default-200 bg-background/80 px-4 py-3">
+      <p className="text-xs uppercase tracking-[0.22em] text-default-500">{label}</p>
+      <p className="mt-2 text-sm leading-6 text-foreground">{value}</p>
     </div>
   );
 }

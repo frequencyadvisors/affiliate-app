@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 export function ViewSwitcher({
   viewMode,
   onChange
@@ -9,33 +11,25 @@ export function ViewSwitcher({
 }) {
   return (
     <div className="w-full">
-      <div className="flex h-10 w-full rounded-[10px] border-2 border-black bg-black/10 p-1 shadow-[2px_2px_0px_0px_black]">
-        <button
+      <div className="flex w-full gap-2 rounded-[18px] border border-white/70 bg-white/60 p-1.5 backdrop-blur-md">
+        <Button
           type="button"
           onClick={() => onChange("brand")}
-          className={[
-            "h-7 flex-1 rounded-[6px] px-3 text-sm font-medium transition-colors",
-            viewMode === "brand"
-              ? "bg-[var(--nav)] text-black"
-              : "text-black hover:bg-black/5"
-          ].join(" ")}
+          variant={viewMode === "brand" ? "default" : "ghost"}
+          className="h-9 flex-1 rounded-[14px]"
           aria-pressed={viewMode === "brand"}
         >
           Brand
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => onChange("publisher")}
-          className={[
-            "h-7 flex-1 rounded-[6px] px-3 text-sm font-medium transition-colors",
-            viewMode === "publisher"
-              ? "bg-[var(--nav)] text-black"
-              : "text-black hover:bg-black/5"
-          ].join(" ")}
+          variant={viewMode === "publisher" ? "default" : "ghost"}
+          className="h-9 flex-1 rounded-[14px]"
           aria-pressed={viewMode === "publisher"}
         >
           Creator
-        </button>
+        </Button>
       </div>
     </div>
   );

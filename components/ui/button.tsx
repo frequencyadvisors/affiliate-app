@@ -1,42 +1,55 @@
 import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { Button as HeroButton } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-[11px] border-2 border-black text-sm font-semibold tracking-[-0.2px] transition active:translate-x-[1px] active:translate-y-[1px] disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground shadow-[3px_3px_0px_0px_black] hover:brightness-105",
-        outline: "bg-[var(--muted)] text-foreground shadow-[2px_2px_0px_0px_black] hover:bg-[#c8f4ff]",
-        ghost: "border-transparent bg-transparent text-muted-foreground shadow-none hover:bg-[var(--muted)] hover:text-foreground",
-        secondary: "bg-[var(--background)] text-foreground shadow-[2px_2px_0px_0px_black] hover:bg-white",
-        destructive: "bg-[#ff7a54] text-black shadow-[2px_2px_0px_0px_black] hover:brightness-95"
-      },
-      size: {
-        default: "h-10 px-4",
-        sm: "h-8 px-3 text-xs",
-        lg: "h-11 px-6",
-        icon: "h-9 w-9"
-      }
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default"
-    }
-  }
-);
+type HeroButtonProps = React.ComponentProps<typeof HeroButton>;
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+export interface ButtonProps extends Omit<HeroButtonProps, "variant" | "size"> {
+  variant?: "default" | "outline" | "ghost" | "secondary" | "destructive";
+  size?: "default" | "sm" | "lg" | "icon";
+  disabled?: boolean;
+}
+
+function mapVariant(variant: ButtonProps["variant"]) {
+  switch (variant) {
+    case "outline":
+      return "outline";
+    case "ghost":
+      return "ghost";
+    case "secondary":
+      return "secondary";
+    case "destructive":
+      return "danger";
+    default:
+      return "primary";
+  }
+}
+
+function mapSize(size: ButtonProps["size"]) {
+  switch (size) {
+    case "sm":
+      return "sm";
+    case "lg":
+      return "lg";
+    default:
+      return "md";
+  }
+}
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
+  ({ className, disabled, variant, size, ...props }, ref) => {
     return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
+      <HeroButton
         ref={ref}
+        variant={mapVariant(variant)}
+        size={mapSize(size)}
+        isIconOnly={size === "icon"}
+        isDisabled={disabled}
+        className={cn(
+          "font-semibold tracking-[-0.02em]",
+          size === "icon" && "size-9 min-w-9",
+          className
+        )}
         {...props}
       />
     );
@@ -44,4 +57,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button };

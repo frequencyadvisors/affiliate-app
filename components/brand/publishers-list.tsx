@@ -1,8 +1,8 @@
 "use client";
 
 import { COMMISSIONS, formatCurrency } from "@/lib/mock-data";
-import { ListSurface } from "@/components/ui/list-surface";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from "@heroui/react";
 
 export function PublishersList({
   programFilter = "all",
@@ -23,34 +23,40 @@ export function PublishersList({
   );
 
   return (
-    <ListSurface>
+    <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       {showHeader && (
-        <div className="px-6 pt-6">
-          <h2 className="text-base font-semibold">Publishers</h2>
-        </div>
+        <CardHeader className="gap-2 p-6 pb-0">
+          <Chip color="accent" variant="soft" size="sm" className="w-fit">Publishers</Chip>
+          <CardTitle className="text-2xl tracking-[-0.04em]">Partner roster</CardTitle>
+          <CardDescription className="text-default-500">
+            Revenue and approval performance by publisher.
+          </CardDescription>
+        </CardHeader>
       )}
-      <div className={showHeader ? "pb-6 pt-4" : "pb-6 pt-6"}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Publisher</TableHead>
-              <TableHead>Total Commissions</TableHead>
-              <TableHead>Conversions</TableHead>
-              <TableHead>Approval Rate</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {grouped.map((p) => (
-              <TableRow key={p.name}>
-                <TableCell>{p.name}</TableCell>
-                <TableCell>{formatCurrency(p.total, "USD")}</TableCell>
-                <TableCell>{p.conversions}</TableCell>
-                <TableCell>{Math.round((p.approved / p.conversions) * 100)}%</TableCell>
+      <CardContent className={showHeader ? "p-6 pt-4" : "p-6"}>
+        <div className="overflow-hidden rounded-3xl border border-default-200 bg-background/95">
+          <Table>
+            <TableHeader className="bg-default-50">
+              <TableRow>
+                <TableHead>Publisher</TableHead>
+                <TableHead>Total commissions</TableHead>
+                <TableHead>Conversions</TableHead>
+                <TableHead>Approval rate</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </ListSurface>
+            </TableHeader>
+            <TableBody>
+              {grouped.map((p) => (
+                <TableRow key={p.name}>
+                  <TableCell className="font-medium text-foreground">{p.name}</TableCell>
+                  <TableCell>{formatCurrency(p.total, "USD")}</TableCell>
+                  <TableCell>{p.conversions}</TableCell>
+                  <TableCell>{Math.round((p.approved / p.conversions) * 100)}%</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

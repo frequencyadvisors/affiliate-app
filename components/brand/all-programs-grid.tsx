@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Chip,
+  Separator
+} from "@heroui/react";
 import { BRAND_PROGRAMS_DATA } from "@/lib/mock-data";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type ProgramLifecycleStatus = "active" | "inactive" | "archived";
 type ProgramFilter = "all" | ProgramLifecycleStatus;
@@ -101,84 +108,222 @@ export function AllProgramsGrid({
 
   const avgAffiliate = filteredPrograms.length ? Math.round((listSummary.affiliate / filteredPrograms.length) * 10) / 10 : 0;
   const avgRoas = filteredPrograms.length ? Math.round((listSummary.roas / filteredPrograms.length) * 10) / 10 : 0;
-  const summaryText = `${filteredPrograms.length} programme${filteredPrograms.length === 1 ? "" : "s"} • $${Math.round(listSummary.revenue).toLocaleString()} revenue • ${listSummary.orders.toLocaleString()} orders • ${avgAffiliate}% affiliate • ${avgRoas}x ROAS`;
+  const totalRevenue = Math.round(listSummary.revenue).toLocaleString();
+  const activeShare = allPrograms.length ? Math.round((counts.active / allPrograms.length) * 100) : 0;
+
+  const statCards = [
+    {
+      label: "Programmes",
+      value: filteredPrograms.length.toString(),
+      caption: `of ${allPrograms.length} in view`,
+      tone: "accent" as const
+    },
+    {
+      label: "Revenue",
+      value: `$${totalRevenue}`,
+      caption: `${listSummary.orders.toLocaleString()} orders`,
+      tone: "success" as const
+    },
+    {
+      label: "Affiliate rate",
+      value: `${avgAffiliate}%`,
+      caption: `${avgRoas}x ROAS`,
+      tone: "warning" as const
+    },
+    {
+      label: "Active share",
+      value: `${activeShare}%`,
+      caption: `${counts.active} active programmes`,
+      tone: "default" as const
+    }
+  ];
 
   return (
-    <div className="flex min-h-[calc(100vh-60px)] w-full flex-col">
-      <div className="mx-auto w-full max-w-[1180px] flex-1 px-8 py-8">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[0.9] tracking-[-0.2px] text-[#04070f]">Affiliate Programmes</h1>
-          <p className="text-[16px] text-muted-foreground">All affiliate programmes created by your organisation.</p>
-        </div>
+    <div className="relative min-h-[calc(100vh-60px)] overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.18),_transparent_32%),radial-gradient(circle_at_top_right,_rgba(14,165,233,0.12),_transparent_28%),linear-gradient(180deg,_rgba(250,252,255,0.98)_0%,_rgba(244,248,252,0.98)_100%)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[linear-gradient(180deg,rgba(255,255,255,0.6),transparent)]" />
 
-        <div className="mt-12 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as ProgramFilter)}>
-            <TabsList className="h-auto flex-wrap gap-2 rounded-[16px] bg-transparent p-0">
-              {PROGRAM_FILTERS.map((filter) => (
-                <TabsTrigger
-                  key={filter.key}
-                  value={filter.key}
-                  className="rounded-[11px] border-2 border-black bg-[var(--muted)] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-[#04070f] shadow-[2px_2px_0px_0px_black] transition active:translate-x-[1px] active:translate-y-[1px]"
-                  activeClassName="rounded-[11px] border-2 border-black bg-[#04070f] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-white shadow-[2px_2px_0px_0px_black]"
-                  inactiveClassName="hover:bg-[#c8f4ff]"
-                >
-                  {filter.label}
-                  <span className="ml-2 text-[12px] opacity-72">{counts[filter.key]}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+      <div className="relative mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-6 py-8 lg:px-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl space-y-4">
+            <Chip color="accent" variant="soft" size="sm" className="shadow-none">
+              Brand workspace
+            </Chip>
+            <div className="space-y-3">
+              <h1 className="text-4xl font-semibold tracking-[-0.05em] text-foreground sm:text-5xl">
+                Affiliate programmes
+              </h1>
+              <p className="max-w-2xl text-base leading-7 text-default-600">
+                A cleaner HeroUI surface for programme visibility, filtering, and commercial review.
+              </p>
+            </div>
+          </div>
 
-          <Button type="button" className="self-start lg:self-auto" onClick={onCreateProgram}>
-            <PlusCircle className="h-5 w-5" />
-            Create Programme
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            className="w-full bg-gradient-to-r from-sky-500 to-cyan-400 text-white shadow-lg shadow-sky-500/20 sm:w-auto"
+            onClick={onCreateProgram}
+          >
+            <Plus className="h-4 w-4" />
+            Create programme
           </Button>
         </div>
 
-        <div className="mt-5 space-y-5">
-          <div className="overflow-hidden rounded-[18px] border-[3px] border-black bg-white shadow-[3px_3px_0px_0px_black]">
-            <Table className="table-fixed">
-              <TableHeader className="bg-[#f7fafc]">
-                <TableRow className="h-[50px] border-b border-black/20 hover:bg-transparent">
-                  <TableHead className="w-[29%]">Programme</TableHead>
-                  <TableHead className="w-[14%]">Business</TableHead>
-                  <TableHead className="w-[12%]">Status</TableHead>
-                  <TableHead className="w-[12%]">Revenue</TableHead>
-                  <TableHead className="w-[12%]">Orders</TableHead>
-                  <TableHead className="w-[12%]">Affiliate</TableHead>
-                  <TableHead className="w-[10%]">ROAS</TableHead>
-                  <TableHead className="w-[12%] text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPrograms.map((program) => (
-                  <TableRow key={program.programName} className="group h-[67px] cursor-pointer bg-white" onClick={() => onOpenProgram(program.programName)}>
-                    <TableCell className="font-semibold">{program.programName}</TableCell>
-                    <TableCell>{program.businessUnitName}</TableCell>
-                    <TableCell>{PROGRAM_STATUS_LABELS[program.status]}</TableCell>
-                    <TableCell className="font-medium">{programMetrics[program.programName]?.revenue || "$0"}</TableCell>
-                    <TableCell>{programMetrics[program.programName]?.orders || "0"}</TableCell>
-                    <TableCell>{programMetrics[program.programName]?.affiliate || program.commissionRate}</TableCell>
-                    <TableCell>{programMetrics[program.programName]?.roas || "0x"}</TableCell>
-                    <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
-                        onClick={() => onOpenProgram(program.programName)}
-                      >
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="rounded-[16px] bg-[#adf0ff] px-[30px] py-[18px] text-[14px] text-[#525c63]">{summaryText}</div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {statCards.map((stat) => (
+            <Card key={stat.label} variant="secondary" className="border border-white/70 bg-white/75 shadow-[0_16px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-default-500">{stat.label}</p>
+                    <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground">{stat.value}</p>
+                  </div>
+                  <Chip
+                    color={stat.tone}
+                    variant="soft"
+                    size="sm"
+                    className="shrink-0"
+                  >
+                    {stat.caption}
+                  </Chip>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+
+        <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-4 pb-0 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-2">
+              <CardTitle className="text-xl tracking-[-0.03em]">Programme library</CardTitle>
+              <CardDescription className="max-w-2xl text-default-500">
+                {filteredPrograms.length} programme{filteredPrograms.length === 1 ? "" : "s"} in view.
+                {" "}
+                {activeFilter === "all" ? "All statuses are visible." : `Filtered to ${PROGRAM_STATUS_LABELS[activeFilter]}.`}
+              </CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="hidden sm:inline-flex"
+              onClick={onCreateProgram}
+            >
+              Create programme
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+
+          <CardContent className="space-y-5 p-5 pt-4 sm:p-6">
+            <div className="flex flex-wrap gap-2 rounded-2xl border border-white/70 bg-white/80 p-1 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-md">
+              {PROGRAM_FILTERS.map((filter) => {
+                const isActive = activeFilter === filter.key;
+
+                return (
+                  <button
+                    key={filter.key}
+                    type="button"
+                    onClick={() => setActiveFilter(filter.key)}
+                    className={[
+                      "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition",
+                      isActive
+                        ? "bg-white text-foreground shadow-sm"
+                        : "text-default-500 hover:bg-default-100/80 hover:text-foreground"
+                    ].join(" ")}
+                    aria-pressed={isActive}
+                  >
+                    {filter.label}
+                    <span className="text-xs text-default-400">{counts[filter.key]}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Separator variant="secondary" className="bg-default-200" />
+
+            <div className="overflow-hidden rounded-3xl border border-default-200 bg-background/90">
+              <div className="hidden grid-cols-[minmax(0,2.2fr)_1fr_0.8fr_0.9fr_0.9fr_0.9fr_0.75fr_auto] gap-4 border-b border-default-200 bg-default-50 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-default-500 lg:grid">
+                <span>Programme</span>
+                <span>Business</span>
+                <span>Status</span>
+                <span>Revenue</span>
+                <span>Orders</span>
+                <span>Affiliate</span>
+                <span>ROAS</span>
+                <span className="text-right">Action</span>
+              </div>
+
+              <div className="divide-y divide-default-200">
+                {filteredPrograms.map((program) => {
+                  const metrics = programMetrics[program.programName];
+                  const statusTone = program.status === "active" ? "success" : program.status === "inactive" ? "warning" : "default";
+
+                  return (
+                    <button
+                      key={program.programName}
+                      type="button"
+                      onClick={() => onOpenProgram(program.programName)}
+                      className="group grid w-full gap-3 px-5 py-4 text-left transition-colors hover:bg-default-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/30 lg:grid-cols-[minmax(0,2.2fr)_1fr_0.8fr_0.9fr_0.9fr_0.9fr_0.75fr_auto] lg:items-center"
+                    >
+                      <div className="space-y-1">
+                        <span className="block font-semibold tracking-[-0.02em] text-foreground">
+                          {program.programName}
+                        </span>
+                        <p className="text-sm text-default-500">{program.businessUnitName}</p>
+                      </div>
+
+                      <div className="text-sm text-default-600 lg:text-foreground">
+                        <span className="lg:hidden mr-2 text-default-400">Business</span>
+                        {program.businessUnitName}
+                      </div>
+
+                      <div className="text-sm text-default-600 lg:text-foreground">
+                        <span className="lg:hidden mr-2 text-default-400">Status</span>
+                        <Chip color={statusTone} variant="soft" size="sm">
+                          {PROGRAM_STATUS_LABELS[program.status]}
+                        </Chip>
+                      </div>
+
+                      <div className="text-sm font-medium text-foreground">
+                        <span className="lg:hidden mr-2 text-default-400">Revenue</span>
+                        {metrics?.revenue || "$0"}
+                      </div>
+
+                      <div className="text-sm text-default-600 lg:text-foreground">
+                        <span className="lg:hidden mr-2 text-default-400">Orders</span>
+                        {metrics?.orders || "0"}
+                      </div>
+
+                      <div className="text-sm text-default-600 lg:text-foreground">
+                        <span className="lg:hidden mr-2 text-default-400">Affiliate</span>
+                        {metrics?.affiliate || program.commissionRate}
+                      </div>
+
+                      <div className="text-sm text-default-600 lg:text-foreground">
+                        <span className="lg:hidden mr-2 text-default-400">ROAS</span>
+                        {metrics?.roas || "0x"}
+                      </div>
+
+                      <div className="flex justify-start lg:justify-end" onClick={(event) => event.stopPropagation()}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-default-500 opacity-100 transition-opacity group-hover:text-foreground lg:opacity-0 lg:group-hover:opacity-100"
+                          onClick={() => onOpenProgram(program.programName)}
+                        >
+                          View
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

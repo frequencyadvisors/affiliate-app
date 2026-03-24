@@ -3,11 +3,17 @@
 import { Activity, AlertTriangle, BadgeDollarSign, Clock, Copy, ShieldCheck, TriangleAlert, Wallet } from "lucide-react";
 import type { ComponentType } from "react";
 import { useMemo, useState } from "react";
+import { Chip } from "@heroui/react";
 import { COMMISSIONS, ENROLLED_PROGRAMS, EnrolledProgram, formatCurrency, getAffiliateLinkForProgram } from "@/lib/mock-data";
-import { AttributionState, getAttributionRecord, getAttributionSummary } from "@/lib/verified-influence";
+import { getAttributionRecord, getAttributionSummary } from "@/lib/verified-influence";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { EarningsActivityPanel, EarningsInfluenceSummaryGrid, EarningsPerformanceSection } from "@/components/publisher/earnings-dashboard";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  EarningsActivitySection as EarningsActivityPanel,
+  EarningsInfluenceSummaryGrid,
+  EarningsPerformanceSection
+} from "@/components/publisher/earnings-dashboard";
 
 export function EnrolledProgramDetail({
   programName,
@@ -89,42 +95,65 @@ export function EnrolledProgramDetail({
   ];
 
   return (
-    <div className="relative grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_404px]">
-      <div className="pointer-events-none absolute right-[404px] top-0 hidden h-full w-[2px] bg-black xl:block" />
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_376px]">
+      <div className="space-y-6">
+        <Card className="border-default-200 bg-background/85 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardContent className="space-y-6 p-6 sm:p-8">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-success" />
+                    <Chip color="success" variant="soft" size="sm">
+                      Enrolled programme
+                    </Chip>
+                  </div>
+                  <Chip color="accent" variant="soft" size="sm">
+                    {program.validationWindow}
+                  </Chip>
+                </div>
+                <div className="space-y-2">
+                  <h1 className="text-4xl font-semibold tracking-[-0.06em] text-foreground sm:text-5xl">{program.programName}</h1>
+                  <CardDescription className="text-base">
+                    {program.brandName} • Enrolled {program.enrolledDate} • {program.attributionModel}
+                  </CardDescription>
+                </div>
+                <p className="max-w-2xl text-sm leading-6 text-default-500 sm:text-base">
+                  A soft overview of how this programme is performing, what attribution is holding up, and where the most important commissions need attention.
+                </p>
+              </div>
 
-      <section className="space-y-6 px-8 py-8 xl:pr-6">
-        <div className="space-y-[18px] px-2 pb-4 pt-1">
-          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
-            <div className="space-y-1">
-              <h1 className="text-[50px] font-semibold leading-none tracking-[-1px] text-[#04070f]">{program.programName}</h1>
-              <p className="text-sm text-muted-foreground">{program.brandName} • Enrolled {program.enrolledDate}</p>
+              <div className="flex flex-col gap-3 lg:max-w-md">
+                <div className="rounded-2xl border border-default-200 bg-default-50/70 p-4 shadow-sm">
+                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-default-500">
+                    <Copy className="h-4 w-4" />
+                    Affiliate link
+                  </div>
+                  <code className="block break-all rounded-xl bg-background px-3 py-3 text-xs leading-6 text-foreground">
+                    {getAffiliateLinkForProgram(program.programName)}
+                  </code>
+                </div>
+                <Button size="lg" onClick={handleCopy}>
+                  <Copy className="h-4 w-4" />
+                  {copied ? "Copied to clipboard" : "Copy affiliate URL"}
+                </Button>
+              </div>
             </div>
-            <div className="flex max-w-full items-center gap-2">
-              <code className="max-w-[340px] truncate rounded-[10px] border-2 border-black bg-white px-3 py-2 text-xs shadow-[2px_2px_0px_0px_black]">
-                {getAffiliateLinkForProgram(program.programName)}
-              </code>
-              <Button size="sm" variant="outline" onClick={handleCopy}>
-                <Copy className="h-4 w-4" />
-                {copied ? "Copied" : "Copy"}
-              </Button>
+
+            <Separator />
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricCard icon={Wallet} label="Secure value" value={formatCurrency(secureCommission, "USD")} hint="Supported by verified attribution" />
+              <MetricCard icon={AlertTriangle} label="At risk" value={formatCurrency(atRiskCommission, "USD")} hint="Needs follow-up review" />
+              <MetricCard icon={Clock} label="Pending attribution" value={formatCurrency(pendingAttribution, "USD")} hint="Evidence still settling" />
+              <MetricCard icon={Activity} label="Approval rate" value={program.trustSummary.approvalRate} hint="Historical commission health" />
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <section className="px-2">
-          <EarningsPerformanceSection
-            chartData={trendData}
-            showTopStats={true}
-            total={totalEarned}
-            pending={pending}
-            activePrograms={1}
-            unified={true}
-          />
-        </section>
+        <EarningsPerformanceSection chartData={trendData} showTopStats total={totalEarned} pending={pending} activePrograms={1} unified />
 
-        <div className="mb-6">
-          <EarningsInfluenceSummaryGrid rows={programRows} />
-        </div>
+        <EarningsInfluenceSummaryGrid rows={programRows} />
 
         <EarningsActivityPanel
           rows={programRows}
@@ -134,85 +163,96 @@ export function EnrolledProgramDetail({
           showProductColumn
           showOrderValueColumn
         />
+      </div>
 
-      </section>
+      <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+        <Card className="border-default-200 bg-background/85 shadow-sm backdrop-blur-xl">
+          <CardHeader className="gap-2">
+            <CardTitle className="text-base">Programme terms</CardTitle>
+            <CardDescription>Reference settings that shape payout and dispute handling.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 pt-0 sm:grid-cols-2 xl:grid-cols-1">
+            <InfoTile label="Commission" value={`${program.commissionRate} ${program.commissionType}`} />
+            <InfoTile label="Attribution" value={program.attributionModel} />
+            <InfoTile label="Validation" value={program.validationWindow} />
+            <InfoTile label="Dispute window" value={program.disputeWindow} />
+          </CardContent>
+        </Card>
 
-      <aside className="border-t-2 border-black xl:sticky xl:top-0 xl:self-start xl:border-t-0">
-        <div className="grid grid-cols-2 border-b-2 border-black">
-          <SidebarMetric className="border-b border-r border-[#04070f]/20" icon={Wallet} label="Secure Value" value={formatCurrency(secureCommission, "USD")} />
-          <SidebarMetric className="border-b border-[#04070f]/20" icon={AlertTriangle} label="At Risk" value={formatCurrency(atRiskCommission, "USD")} />
-          <SidebarMetric className="border-r border-[#04070f]/20" icon={Activity} label="Approval Rate" value={program.trustSummary.approvalRate} />
-          <SidebarMetric icon={Clock} label="Validation" value={program.validationWindow} />
-        </div>
+        <Card className="border-default-200 bg-background/85 shadow-sm backdrop-blur-xl">
+          <CardHeader className="gap-2">
+            <CardTitle className="text-base">What to watch</CardTitle>
+            <CardDescription>The main items to monitor before pushing more traffic.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-0">
+            <AlertTile
+              label="Secure commissions"
+              value={`${formatCurrency(secureCommission, "USD")} currently look well-supported by attribution evidence.`}
+            />
+            <AlertTile
+              label="Contested commissions"
+              value={`${formatCurrency(atRiskCommission, "USD")} sit in disputed records and may require follow-up.`}
+            />
+            <AlertTile
+              label="Pending attribution"
+              value={`${formatCurrency(pendingAttribution, "USD")} still lacks enough evidence to feel settled.`}
+            />
+          </CardContent>
+        </Card>
 
-        <section className="border-b border-[#04070f]/20 px-6 py-6">
-          <h2 className="text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">Program Terms</h2>
-          <div className="mt-4 grid grid-cols-2 gap-1.5 text-sm">
-            <TermCard label="Commission" value={`${program.commissionRate} ${program.commissionType}`} />
-            <TermCard label="Attribution" value={program.attributionModel} />
-            <TermCard label="Validation" value={program.validationWindow} />
-            <TermCard label="Dispute Window" value={program.disputeWindow} />
-          </div>
-        </section>
-
-        <section className="border-b border-[#04070f]/20 px-6 py-6">
-          <h2 className="text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">What To Watch</h2>
-          <div className="mt-4 space-y-3">
-            <PolicyNote label="Secure commissions" value={`${formatCurrency(secureCommission, "USD")} currently look well-supported by attribution evidence.`} />
-            <PolicyNote label="Contested commissions" value={`${formatCurrency(atRiskCommission, "USD")} sit in disputed records and may require follow-up.`} />
-            <PolicyNote label="Pending attribution" value={`${formatCurrency(pendingAttribution, "USD")} still lacks enough evidence to feel settled.`} />
-          </div>
-        </section>
-
-        <section className="px-6 py-6">
-          <h2 className="text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">Programme Health</h2>
-          <div className="mt-4 space-y-3">
-            <HealthRow icon={ShieldCheck} label="Verified Share" value={`${verifiedShare}%`} />
-            <HealthRow icon={BadgeDollarSign} label="Average Payout" value={program.trustSummary.avgPayout} />
-            <HealthRow icon={TriangleAlert} label="Open Attention" value={`${summary.disputed.conversions + summary.unestablished.conversions} records`} />
-          </div>
-        </section>
+        <Card className="border-default-200 bg-background/85 shadow-sm backdrop-blur-xl">
+          <CardHeader className="gap-2">
+            <CardTitle className="text-base">Programme health</CardTitle>
+            <CardDescription>High-level signals for this programme&apos;s operational quality.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-0">
+            <HealthRow icon={ShieldCheck} label="Verified share" value={`${verifiedShare}%`} />
+            <HealthRow icon={BadgeDollarSign} label="Average payout" value={program.trustSummary.avgPayout} />
+            <HealthRow icon={TriangleAlert} label="Open attention" value={`${summary.disputed.conversions + summary.unestablished.conversions} records`} />
+          </CardContent>
+        </Card>
       </aside>
     </div>
   );
 }
 
-function SidebarMetric({
-  className,
+function MetricCard({
   icon: Icon,
   label,
-  value
+  value,
+  hint
 }: {
-  className?: string;
   icon: ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  hint: string;
 }) {
   return (
-    <div className={`min-h-[153px] p-5 ${className ?? ""}`}>
-      <div className="mb-1.5 flex items-center justify-between gap-2">
-        <p className="text-[12px] font-semibold uppercase leading-[16px] tracking-[0.72px] text-[#04070f]/50">{label}</p>
-        <Icon className="h-4 w-4" />
+    <div className="rounded-2xl border border-default-200 bg-default-50/60 p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-default-500">{label}</p>
+        <Icon className="h-4 w-4 text-default-400" />
       </div>
-      <p className="text-[35px] font-semibold leading-[35px] tracking-[-0.2px] text-[#04070f]">{value}</p>
+      <p className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-foreground">{value}</p>
+      <p className="mt-1 text-sm leading-5 text-default-500">{hint}</p>
     </div>
   );
 }
 
-function TermCard({ label, value }: { label: string; value: string }) {
+function InfoTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[6px] bg-[rgba(55,220,255,0.3)] px-3 py-2.5">
-      <p className="text-[14px] font-normal leading-[16px] text-[#525c63]">{label}</p>
-      <p className="mt-1 text-[16px] font-medium leading-[20px] text-[#04070f]">{value}</p>
+    <div className="rounded-2xl border border-default-200 bg-default-50/60 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-default-500">{label}</p>
+      <p className="mt-2 text-sm font-medium text-foreground">{value}</p>
     </div>
   );
 }
 
-function PolicyNote({ label, value }: { label: string; value: string }) {
+function AlertTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[10px] border border-black/10 bg-[rgba(242,253,255,0.45)] px-3 py-3">
-      <p className="text-[12px] uppercase tracking-[0.72px] text-[#04070f]/50">{label}</p>
-      <p className="mt-1 text-[14px] leading-5 text-[#04070f]">{value}</p>
+    <div className="rounded-2xl border border-default-200 bg-background/90 p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-default-500">{label}</p>
+      <p className="mt-2 text-sm leading-6 text-foreground">{value}</p>
     </div>
   );
 }
@@ -227,12 +267,12 @@ function HealthRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-[10px] border border-black/10 bg-[rgba(242,253,255,0.45)] px-3 py-3">
+    <div className="flex items-center justify-between rounded-2xl border border-default-200 bg-default-50/60 px-4 py-3">
       <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-[#04070f]/62" />
-        <span className="text-[14px] text-[#04070f]/72">{label}</span>
+        <Icon className="h-4 w-4 text-default-500" />
+        <span className="text-sm text-foreground">{label}</span>
       </div>
-      <span className="text-[14px] font-semibold text-[#04070f]">{value}</span>
+      <span className="text-sm font-semibold text-foreground">{value}</span>
     </div>
   );
 }

@@ -15,8 +15,7 @@ import {
   type Commission
 } from "@/lib/mock-data";
 import { CommissionStatusChip } from "@/components/commission-status-chip";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListSurface } from "@/components/ui/list-surface";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from "@heroui/react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 function estimateOrderValue(commission: Commission, program: BrandProgramData | undefined) {
@@ -171,28 +170,35 @@ export function CreatorInsights({
   }, [creatorName]);
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-6 px-8 py-8">
-      <div className="rounded-[14px] border-2 border-black bg-card p-5 shadow-[4px_4px_0px_0px_black]">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img
-              alt={creatorName}
-              src={profile?.avatar ?? "https://i.pravatar.cc/100"}
-              className="h-14 w-14 rounded-full border-2 border-black/10 object-cover"
-            />
-            <div>
-              <h1 className="text-[34px] font-semibold leading-[32px] tracking-[-0.2px] text-[#04070f]">{creatorName}</h1>
-              <p className="text-sm text-muted-foreground">
-                {profile?.handle ?? "@creator"} · {profile?.niche ?? "Creator"} · First conversion {data.firstConversion ? formatDate(data.firstConversion) : "—"}
-              </p>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+      <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <CardHeader className="gap-5 p-6 sm:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-3">
+              <Chip color="accent" variant="soft" size="sm" className="w-fit">
+                Creator insights
+              </Chip>
+              <div className="flex items-center gap-3">
+                <img
+                  alt={creatorName}
+                  src={profile?.avatar ?? "https://i.pravatar.cc/100"}
+                  className="h-14 w-14 rounded-full object-cover"
+                />
+                <div>
+                  <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">{creatorName}</h1>
+                  <p className="text-sm text-default-500">
+                    {profile?.handle ?? "@creator"} · {profile?.niche ?? "Creator"} · First conversion {data.firstConversion ? formatDate(data.firstConversion) : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-default-200 bg-background/80 px-4 py-3 text-sm text-default-500">
+              <p className="font-medium text-foreground">{data.businessUnits.join(" • ") || "No businesses yet"}</p>
+              <p>{data.programRows.length} programs across the brand relationship</p>
             </div>
           </div>
-          <div className="text-right text-sm text-muted-foreground">
-            <p className="font-medium text-[#04070f]">{data.businessUnits.join(" • ") || "No businesses yet"}</p>
-            <p>{data.programRows.length} programs across the brand relationship</p>
-          </div>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SummaryCard icon={CircleDollarSign} label="Total Commissions" value={formatCurrency(data.totalCommissions, "USD")} />
@@ -208,165 +214,129 @@ export function CreatorInsights({
         <SummaryCard icon={Users} label="Businesses" value={`${data.businessUnits.length}`} subValue="Across brand account" />
       </div>
 
-      <ListSurface>
-        <div className="px-6 pt-6">
-          <h2 className="text-[18px] font-semibold">Programme Participation Breakdown</h2>
-        </div>
-        <div className="pb-6 pt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Programme</TableHead>
-                <TableHead>Business</TableHead>
-                <TableHead>Conversions</TableHead>
-                <TableHead>Total Commissions</TableHead>
-                <TableHead>Total Revenue</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.programRows.map((row) => {
-                const active = getAgeDays(row.latestConversion) <= 60;
-                return (
-                  <TableRow key={`${row.programName}-${row.businessUnit}`}>
-                    <TableCell className="font-medium">{row.programName}</TableCell>
-                    <TableCell>{row.businessUnit}</TableCell>
-                    <TableCell>{row.conversions}</TableCell>
-                    <TableCell>{formatCurrency(row.commissionsTotal, "USD")}</TableCell>
-                    <TableCell>{formatCurrency(row.revenueTotal, "USD")}</TableCell>
-                    <TableCell>{active ? "Active" : "Historical"}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </ListSurface>
+      <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <CardHeader className="gap-2 p-6 pb-0">
+          <CardTitle className="text-lg tracking-[-0.02em]">Programme Participation Breakdown</CardTitle>
+          <CardDescription className="text-default-500">
+            Program-level contribution across commissions and revenue.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6 pt-4">
+          <div className="overflow-hidden rounded-3xl border border-default-200 bg-background/95">
+            <Table>
+              <TableHeader className="bg-default-50">
+                <TableRow>
+                  <TableHead>Programme</TableHead>
+                  <TableHead>Business</TableHead>
+                  <TableHead>Conversions</TableHead>
+                  <TableHead>Total Commissions</TableHead>
+                  <TableHead>Total Revenue</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.programRows.map((row) => {
+                  const active = getAgeDays(row.latestConversion) <= 60;
+                  return (
+                    <TableRow key={`${row.programName}-${row.businessUnit}`}>
+                      <TableCell className="font-medium text-foreground">{row.programName}</TableCell>
+                      <TableCell>{row.businessUnit}</TableCell>
+                      <TableCell>{row.conversions}</TableCell>
+                      <TableCell>{formatCurrency(row.commissionsTotal, "USD")}</TableCell>
+                      <TableCell>{formatCurrency(row.revenueTotal, "USD")}</TableCell>
+                      <TableCell>{active ? "Active" : "Historical"}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
-      <ListSurface>
-        <div className="px-6 pt-6">
-          <h2 className="text-[18px] font-semibold">Complete Commission History</h2>
-        </div>
-        <div className="pb-6 pt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Programme</TableHead>
-                <TableHead>Business</TableHead>
-                <TableHead>Order Ref</TableHead>
-                <TableHead>Commission</TableHead>
-                <TableHead>Order Value</TableHead>
-                <TableHead>Conversion Date</TableHead>
-                <TableHead>Validation Status</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Risk</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.commissions.map((c) => {
-                const program = BRAND_PROGRAMS_DATA[c.programName];
-                const orderValue = estimateOrderValue(c, program);
-                return (
-                  <TableRow key={c.id}>
-                    <TableCell>{c.programName}</TableCell>
-                    <TableCell>{program?.businessUnitName ?? "Unknown"}</TableCell>
-                    <TableCell>{c.orderId}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(c.amount, c.currency)}</TableCell>
-                    <TableCell>{formatCurrency(orderValue, c.currency)}</TableCell>
-                    <TableCell>{formatDate(c.conversionTimestamp)}</TableCell>
-                    <TableCell><CommissionStatusChip status={c.status} viewer="brand" /></TableCell>
-                    <TableCell>{getAgeDays(c.conversionTimestamp)}d</TableCell>
-                    <TableCell>{c.riskFlags?.[0] ?? "—"}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </ListSurface>
-
-      <ListSurface>
-        <div className="space-y-1 px-6 pt-6">
-          <h2 className="text-[18px] font-semibold">People Behind The Conversions</h2>
-          <p className="text-sm text-muted-foreground">
+      <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <CardHeader className="gap-2 p-6 pb-0">
+          <CardTitle className="text-lg tracking-[-0.02em]">Complete Commission History</CardTitle>
+          <CardDescription className="text-default-500">
             Customer-level view of who converted through {creatorName}, what they bought, and the buyer profiles emerging across programs.
-          </p>
-        </div>
-        <div className="space-y-4 pb-6 pt-4">
-          <div className="flex flex-wrap gap-2 px-6">
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 p-6 pt-4">
+          <div className="flex flex-wrap gap-2">
             {data.buyerSegments.map(([segment, count]) => (
-              <span
-                key={segment}
-                className="rounded-full border border-black/10 bg-[rgba(55,220,255,0.2)] px-3 py-1 text-xs font-medium text-[#04070f]"
-              >
+              <Chip key={segment} color="default" variant="soft" size="sm">
                 {segment} · {count}
-              </span>
+              </Chip>
             ))}
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Buyer Profile</TableHead>
-                <TableHead>What They Bought</TableHead>
-                <TableHead>Program</TableHead>
-                <TableHead>Order Value</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.customerRows.map((row) => (
-                <TableRow key={`customer-${row.id}`}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-[#04070f]">{row.customerName}</p>
-                      <p className="text-xs text-muted-foreground">{row.location}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{row.buyerProfile}</TableCell>
-                  <TableCell>{row.purchased}</TableCell>
-                  <TableCell>{row.programName}</TableCell>
-                  <TableCell>{formatCurrency(row.orderValue, row.currency)}</TableCell>
-                  <TableCell>{formatDate(row.conversionTimestamp)}</TableCell>
+          <div className="overflow-hidden rounded-3xl border border-default-200 bg-background/95">
+            <Table>
+              <TableHeader className="bg-default-50">
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Buyer Profile</TableHead>
+                  <TableHead>What They Bought</TableHead>
+                  <TableHead>Program</TableHead>
+                  <TableHead>Order Value</TableHead>
+                  <TableHead>Date</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </ListSurface>
+              </TableHeader>
+              <TableBody>
+                {data.customerRows.map((row) => (
+                  <TableRow key={`customer-${row.id}`}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-foreground">{row.customerName}</p>
+                        <p className="text-xs text-default-500">{row.location}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>{row.buyerProfile}</TableCell>
+                    <TableCell>{row.purchased}</TableCell>
+                    <TableCell>{row.programName}</TableCell>
+                    <TableCell>{formatCurrency(row.orderValue, "USD")}</TableCell>
+                    <TableCell>{formatDate(row.conversionTimestamp)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[18px]">Revenue Contribution by Business</CardTitle>
+        <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-2 p-6">
+            <CardTitle className="text-lg tracking-[-0.02em]">Revenue Contribution by Business</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 px-6 pb-6">
             {data.byBusinessUnit.map((unit) => (
               <div key={unit.businessUnit} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span>{unit.businessUnit}</span>
-                  <span className="font-medium">{formatCurrency(unit.revenue, "USD")} · {unit.share.toFixed(1)}%</span>
+                  <span className="text-foreground">{unit.businessUnit}</span>
+                  <span className="font-medium text-foreground">
+                    {formatCurrency(unit.revenue, "USD")} · {unit.share.toFixed(1)}%
+                  </span>
                 </div>
-                <div className="h-2 rounded-full bg-black/10">
-                  <div className="h-2 rounded-full bg-[#37dcff]" style={{ width: `${Math.max(4, unit.share)}%` }} />
+                <div className="h-2 rounded-full bg-default-200">
+                  <div className="h-2 rounded-full bg-accent" style={{ width: `${Math.max(4, unit.share)}%` }} />
                 </div>
               </div>
             ))}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[18px]">Conversion Trend Over Time</CardTitle>
+        <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-2 p-6">
+            <CardTitle className="text-lg tracking-[-0.02em]">Conversion Trend Over Time</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 px-6 pb-6">
             {data.monthlyTrend.map((point) => (
               <div key={point.period} className="grid grid-cols-[62px_minmax(0,1fr)_40px] items-center gap-2 text-sm">
-                <span className="text-muted-foreground">{point.period}</span>
-                <div className="h-2 rounded-full bg-black/10">
-                  <div className="h-2 rounded-full bg-black" style={{ width: `${(point.count / data.maxTrend) * 100}%` }} />
+                <span className="text-default-500">{point.period}</span>
+                <div className="h-2 rounded-full bg-default-200">
+                  <div className="h-2 rounded-full bg-accent" style={{ width: `${(point.count / data.maxTrend) * 100}%` }} />
                 </div>
-                <span className="text-right font-medium">{point.count}</span>
+                <span className="text-right font-medium text-foreground">{point.count}</span>
               </div>
             ))}
           </CardContent>
@@ -388,14 +358,14 @@ function SummaryCard({
   subValue?: string;
 }) {
   return (
-    <Card>
+    <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
       <CardContent className="space-y-2 p-4">
-        <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/50">
-          <Icon className="h-4 w-4 text-[#04070f]" />
+        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-default-500">
+          <Icon className="h-4 w-4 text-default-500" />
           <span>{label}</span>
         </div>
-        <p className="text-[30px] font-semibold leading-[30px] tracking-[-0.2px] text-[#04070f]">{value}</p>
-        {subValue && <p className="text-xs text-muted-foreground">{subValue}</p>}
+        <p className="text-3xl font-semibold leading-[30px] tracking-[-0.04em] text-foreground">{value}</p>
+        {subValue && <p className="text-xs text-default-500">{subValue}</p>}
       </CardContent>
     </Card>
   );

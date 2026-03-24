@@ -16,9 +16,9 @@ const reversalOptions = [
   "Policy violation by publisher",
   "Funding hold or billing issue"
 ];
-const FLOW_COLUMN_CLASS = "mx-auto w-full max-w-[860px]";
-const FLOW_INPUT_CLASS = "h-9 rounded-[6px] border-black/10 bg-[rgba(224,249,255,0.6)] text-[#04070f] placeholder:text-[#04070f]/50";
-const FLOW_FIELD_LABEL_CLASS = "text-[16px] font-semibold tracking-[-0.32px] text-[#04070f]";
+const FLOW_COLUMN_CLASS = "mx-auto w-full max-w-6xl";
+const FLOW_INPUT_CLASS = "h-10 rounded-2xl border border-default-200 bg-background/90 text-foreground placeholder:text-default-400";
+const FLOW_FIELD_LABEL_CLASS = "text-base font-medium tracking-[-0.02em] text-foreground";
 
 export type CreateProgramDraft = {
   programName: string;
@@ -102,9 +102,9 @@ export function CreateProgram({
     <div className="flex w-full flex-col gap-6">
       <Stepper currentStep={step} />
 
-      <div className={cn(FLOW_COLUMN_CLASS, "space-y-2 pt-[26px] text-center")}>
-        <h1 className="text-[44px] font-semibold leading-[1] tracking-[-0.2px] text-[#04070f]">{pageMeta.title}</h1>
-        <p className="text-[18px] text-muted-foreground">{pageMeta.subtitle}</p>
+      <div className={cn(FLOW_COLUMN_CLASS, "space-y-2 pt-2 text-center")}>
+        <h1 className="text-4xl font-semibold tracking-[-0.04em] text-foreground">{pageMeta.title}</h1>
+        <p className="text-base text-default-500">{pageMeta.subtitle}</p>
       </div>
 
       {step === 0 && (
@@ -194,7 +194,7 @@ export function CreateProgram({
             <FlowSection className="space-y-3">
               <div>
                 <h2 className="text-[28px] font-semibold tracking-[-0.2px]">Attribution Model</h2>
-                <p className="text-sm text-muted-foreground">Choose how conversions are credited to publishers.</p>
+                <p className="text-sm text-default-500">Choose how conversions are credited to publishers.</p>
               </div>
 
               <div className="space-y-3">
@@ -225,7 +225,7 @@ export function CreateProgram({
             <FlowSection className="space-y-3">
               <div>
                 <h2 className="text-[28px] font-semibold tracking-[-0.2px]">Reversal Policy</h2>
-                <p className="text-sm text-muted-foreground">Select the reasons you may reverse a commission.</p>
+                <p className="text-sm text-default-500">Select the reasons you may reverse a commission.</p>
               </div>
 
               <div className="space-y-2">
@@ -243,7 +243,7 @@ export function CreateProgram({
                           setSelectedReversalReasons(next);
                           setForm({ ...form, reversalReasons: next.join(", ") });
                         }}
-                        className="h-4 w-4 rounded border-black"
+                        className="h-4 w-4 rounded border-default-300 text-accent focus:ring-accent/20"
                       />
                       {option}
                     </label>
@@ -270,8 +270,8 @@ export function CreateProgram({
         <div className={cn(FLOW_COLUMN_CLASS, "space-y-4")}>
           <FlowCard>
             <FlowSection className="space-y-1">
-              <p className="text-[32px] font-semibold tracking-[-0.2px] text-[#04070f]">{form.programName || "Program Name"}</p>
-              <p className="text-[20px] text-muted-foreground">
+              <p className="text-3xl font-semibold tracking-[-0.04em] text-foreground">{form.programName || "Program Name"}</p>
+              <p className="text-base text-default-500">
                 {formatProgramDate(form.startDate) || "Start date"} — {formatProgramDate(form.endDate) || "Ongoing"}
               </p>
             </FlowSection>
@@ -297,7 +297,7 @@ export function CreateProgram({
                 <PreviewItem title="Dispute Window" value={form.disputeWindow} />
             </FlowSection>
           </FlowCard>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-default-500">
             These terms are locked once the program is published. To change them, create a new program version.
           </p>
         </div>
@@ -369,21 +369,21 @@ export function CreateProgram({
 
 function Stepper({ currentStep }: { currentStep: number }) {
   return (
-    <div className="flex w-full flex-wrap items-center justify-center gap-5">
+    <div className="flex w-full flex-wrap items-center justify-center gap-3">
       {steps.map((label, index) => {
         const complete = index < currentStep;
         const active = index === currentStep;
         return (
-          <div key={label} className="flex items-center gap-2.5">
+          <div key={label} className="flex items-center gap-2">
             <div
               className={[
-                "flex h-[27px] w-[27px] items-center justify-center rounded-full border-2 p-[2px] text-[14px] font-semibold leading-5",
-                complete || active ? "border-black bg-black text-white" : "border-black bg-white text-black"
+                "flex h-7 w-7 items-center justify-center rounded-full border text-sm font-medium",
+                complete || active ? "border-accent bg-accent text-accent-foreground" : "border-default-300 bg-background text-foreground"
               ].join(" ")}
             >
               {complete ? <Check className="h-5 w-5" /> : index + 1}
             </div>
-            <p className={["text-[16px] leading-[22.857px] tracking-[-0.32px] text-[#04070f]", active || complete ? "font-semibold" : "font-normal"].join(" ")}>
+            <p className={["text-sm tracking-[-0.02em] text-foreground", active || complete ? "font-semibold" : "font-normal"].join(" ")}>
               {label}
             </p>
           </div>
@@ -406,7 +406,7 @@ function Field({
     <div className="space-y-1.5">
       <Label className={FLOW_FIELD_LABEL_CLASS}>
         {label}
-        {required && <span className="ml-1 text-primary">*</span>}
+        {required && <span className="ml-1 text-accent">*</span>}
       </Label>
       {children}
     </div>
@@ -427,8 +427,7 @@ function SelectLike({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 w-full appearance-none rounded-[6px] border border-black/10 bg-[rgba(224,249,255,0.6)] px-3 pr-8 text-sm text-[#04070f]"
-        style={{ borderColor: "rgba(0,0,0,0.10)" }}
+        className="h-10 w-full appearance-none rounded-2xl border border-default-200 bg-background/90 px-3 pr-8 text-sm text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -436,7 +435,7 @@ function SelectLike({
           </option>
         ))}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-black/50" />
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-default-400" />
     </div>
   );
 }
@@ -454,7 +453,7 @@ function DateLikeInput({
 
   return (
     <div className="relative">
-      <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-black/50" />
+      <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-default-400" />
       <Input
         ref={inputRef}
         type="date"
@@ -498,15 +497,15 @@ function Segmented({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="inline-flex h-10 rounded-[10px] border-2 border-black bg-black p-1 shadow-[2px_2px_0px_0px_black]">
+    <div className="inline-flex h-10 rounded-2xl border border-default-200 bg-default-100 p-1">
       {options.map((option) => (
         <button
           key={option}
           type="button"
           onClick={() => onChange(option)}
           className={[
-            "h-7 rounded-[6px] px-4 text-[14px] font-medium leading-5 transition-colors",
-            value === option ? "bg-white text-black" : "text-white hover:bg-white/10"
+            "h-8 rounded-xl px-4 text-sm font-medium leading-5 transition-colors",
+            value === option ? "bg-background text-foreground shadow-sm" : "text-default-500 hover:bg-background/70 hover:text-foreground"
           ].join(" ")}
         >
           {option}
@@ -517,7 +516,7 @@ function Segmented({
 }
 
 function SectionDivider() {
-  return <div className="h-px w-full bg-black/15" />;
+  return <div className="h-px w-full bg-default-200" />;
 }
 
 function AttributionOption({
@@ -538,18 +537,18 @@ function AttributionOption({
       type="button"
       onClick={onSelect}
       className={[
-        "w-full rounded-[12px] border-2 bg-white p-3.5 text-left transition-colors",
-        checked ? "border-black" : "border-black/20 hover:border-black/40"
+        "w-full rounded-2xl border bg-background/90 p-4 text-left transition-colors",
+        checked ? "border-accent ring-1 ring-accent/20" : "border-default-200 hover:border-default-300"
       ].join(" ")}
     >
       <div className="flex items-center gap-2">
-        <span className={["h-4 w-4 rounded-full border-2", checked ? "border-black bg-black" : "border-black/30"].join(" ")} />
-        <p className="text-[24px] font-semibold leading-none tracking-[-0.2px] text-[#04070f]">{title}</p>
+        <span className={["h-4 w-4 rounded-full border-2", checked ? "border-accent bg-accent" : "border-default-300"].join(" ")} />
+        <p className="text-2xl font-semibold leading-none tracking-[-0.04em] text-foreground">{title}</p>
         {recommendation && (
-          <span className="rounded-full bg-[#a6f2b4] px-2 py-0.5 text-xs font-medium text-[#0d5e1d]">{recommendation}</span>
+          <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">{recommendation}</span>
         )}
       </div>
-      <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+      <p className="mt-1.5 text-sm text-default-500">{description}</p>
     </button>
   );
 }
@@ -557,8 +556,8 @@ function AttributionOption({
 function PreviewItem({ title, value }: { title: string; value: string }) {
   return (
     <div className="space-y-1">
-      <p className="text-xs font-semibold uppercase tracking-[0.72px] text-muted-foreground">{title}</p>
-      <p className="text-[18px] text-[#04070f]">{value}</p>
+      <p className="text-xs font-medium uppercase tracking-[0.22em] text-default-500">{title}</p>
+      <p className="text-lg text-foreground">{value}</p>
     </div>
   );
 }
@@ -567,11 +566,11 @@ function ReviewCard({ title, rows }: { title: string; rows: [string, string][] }
   return (
     <FlowCard>
       <FlowSection className="space-y-3">
-        <h2 className="text-[28px] font-semibold tracking-[-0.2px] text-[#04070f]">{title}</h2>
+        <h2 className="text-2xl font-semibold tracking-[-0.04em] text-foreground">{title}</h2>
         {rows.map(([label, value]) => (
-          <div key={label} className="grid grid-cols-1 gap-1 border-b border-black/10 pb-2.5 last:border-0 last:pb-0 md:grid-cols-[220px_minmax(0,1fr)] md:gap-4">
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-[18px] font-medium text-[#04070f]">{value}</p>
+          <div key={label} className="grid grid-cols-1 gap-1 border-b border-default-200 pb-2.5 last:border-0 last:pb-0 md:grid-cols-[220px_minmax(0,1fr)] md:gap-4">
+            <p className="text-sm text-default-500">{label}</p>
+            <p className="text-lg font-medium text-foreground">{value}</p>
           </div>
         ))}
       </FlowSection>
@@ -581,7 +580,7 @@ function ReviewCard({ title, rows }: { title: string; rows: [string, string][] }
 
 function FlowCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <Card className={cn("overflow-hidden rounded-[24px]", className)}>
+    <Card className={cn("overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)]", className)}>
       <CardContent className="p-0">{children}</CardContent>
     </Card>
   );
@@ -604,16 +603,16 @@ function InlineSegmentField({
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <Label className="text-[16px] font-semibold tracking-[-0.32px] text-[#04070f]">{label}</Label>
-      <div className="inline-flex h-10 items-start rounded-[10px] border-2 border-black bg-black p-1 shadow-[2px_2px_0px_0px_black]">
+      <Label className="text-base font-medium tracking-[-0.02em] text-foreground">{label}</Label>
+      <div className="inline-flex h-10 items-start rounded-2xl border border-default-200 bg-default-100 p-1">
         {options.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => onChange(option)}
             className={cn(
-              "rounded-[6px] px-4 py-1 text-[14px] font-medium leading-5",
-              value === option ? "bg-white text-black" : "text-white"
+              "rounded-xl px-4 py-1 text-sm font-medium leading-5",
+              value === option ? "bg-background text-foreground shadow-sm" : "text-default-500"
             )}
           >
             {option}
@@ -640,14 +639,14 @@ function CommissionTypeRateRow({
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <div className="flex items-center justify-between gap-3">
-        <Label className="text-[16px] font-semibold tracking-[-0.32px] text-[#04070f]">Commission Type</Label>
-        <div className="inline-flex h-10 items-start rounded-[10px] border-2 border-black bg-black p-1 shadow-[2px_2px_0px_0px_black]">
+        <Label className="text-base font-medium tracking-[-0.02em] text-foreground">Commission Type</Label>
+        <div className="inline-flex h-10 items-start rounded-2xl border border-default-200 bg-default-100 p-1">
           <button
             type="button"
             onClick={() => onTypeChange("Percentage")}
             className={cn(
-              "rounded-[6px] px-4 py-1 text-[14px] font-medium leading-5",
-              isPercent ? "bg-white text-black" : "text-white"
+              "rounded-xl px-4 py-1 text-sm font-medium leading-5",
+              isPercent ? "bg-background text-foreground shadow-sm" : "text-default-500"
             )}
           >
             %
@@ -656,8 +655,8 @@ function CommissionTypeRateRow({
             type="button"
             onClick={() => onTypeChange("Flat Fee")}
             className={cn(
-              "rounded-[6px] px-4 py-1 text-[14px] font-medium leading-5",
-              !isPercent ? "bg-white text-black" : "text-white"
+              "rounded-xl px-4 py-1 text-sm font-medium leading-5",
+              !isPercent ? "bg-background text-foreground shadow-sm" : "text-default-500"
             )}
           >
             Flat Fee
@@ -666,23 +665,22 @@ function CommissionTypeRateRow({
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <Label className="text-[16px] font-semibold tracking-[-0.32px] text-[#04070f]">
-          Commission Rate<span className="ml-1 text-primary">*</span>
+        <Label className="text-base font-medium tracking-[-0.02em] text-foreground">
+          Commission Rate<span className="ml-1 text-accent">*</span>
         </Label>
         <div
-          className="inline-flex h-9 items-center gap-1 rounded-[6px] border border-black/10 bg-[rgba(224,249,255,0.6)] px-3"
-          style={{ borderColor: "rgba(0,0,0,0.10)" }}
+          className="inline-flex h-10 items-center gap-1 rounded-2xl border border-default-200 bg-background/90 px-3"
         >
-          {!isPercent && <span className="text-[14px] text-[#04070f]">$</span>}
+          {!isPercent && <span className="text-sm text-foreground">$</span>}
           <input
             type="text"
             inputMode="decimal"
             value={commissionRate}
             onChange={(e) => onRateChange(e.target.value)}
-            className="w-10 bg-transparent text-[14px] text-[#04070f]/70 outline-none"
+            className="w-12 bg-transparent text-sm text-foreground outline-none"
             placeholder="12"
           />
-          {isPercent && <span className="text-[14px] text-[#04070f]">%</span>}
+          {isPercent && <span className="text-sm text-foreground">%</span>}
         </div>
       </div>
     </div>
@@ -702,19 +700,19 @@ function GovernanceFooterRow({
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,280px)_minmax(0,1fr)_minmax(0,180px)] lg:items-center">
-      <Label className="text-[16px] font-semibold tracking-[-0.32px] text-[#04070f] lg:text-[18px]">
+      <Label className="text-base font-medium tracking-[-0.02em] text-foreground lg:text-lg">
         Supporting note on reversals
       </Label>
 
-      <div className="inline-flex h-10 w-full items-start rounded-[10px] border-2 border-black bg-black p-1 shadow-[2px_2px_0px_0px_black]">
+      <div className="inline-flex h-10 w-full items-start rounded-2xl border border-default-200 bg-default-100 p-1">
         {(["Optional", "Required"] as const).map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => onExplanationChange(option)}
             className={cn(
-              "flex flex-1 items-center justify-center rounded-[6px] px-4 py-1 text-[14px] font-medium leading-5 transition-colors",
-              explanationCommitment === option ? "bg-white text-black" : "text-white"
+              "flex flex-1 items-center justify-center rounded-xl px-4 py-1 text-sm font-medium leading-5 transition-colors",
+              explanationCommitment === option ? "bg-background text-foreground shadow-sm" : "text-default-500"
             )}
           >
             {option}
@@ -722,7 +720,7 @@ function GovernanceFooterRow({
         ))}
       </div>
 
-      <Label className="text-[16px] font-semibold tracking-[-0.32px] text-[#04070f] lg:text-[18px]">
+      <Label className="text-base font-medium tracking-[-0.02em] text-foreground lg:text-lg">
         Publisher dispute window
       </Label>
 
@@ -730,8 +728,7 @@ function GovernanceFooterRow({
         <select
           value={disputeWindow}
           onChange={(e) => onDisputeWindowChange(e.target.value)}
-          className="h-[56px] w-full appearance-none rounded-[14px] border border-black/10 bg-[rgba(224,249,255,0.6)] px-5 pr-12 text-[18px] font-medium tracking-[-0.36px] text-[#04070f]"
-          style={{ borderColor: "rgba(0,0,0,0.10)" }}
+          className="h-12 w-full appearance-none rounded-2xl border border-default-200 bg-background/90 px-5 pr-12 text-base font-medium tracking-[-0.02em] text-foreground"
         >
           {["7 days", "14 days", "21 days"].map((option) => (
             <option key={option} value={option}>
@@ -739,7 +736,7 @@ function GovernanceFooterRow({
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-black/50" />
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-default-400" />
       </div>
     </div>
   );

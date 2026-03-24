@@ -6,9 +6,9 @@ import { COMMISSIONS, formatCurrency } from "@/lib/mock-data";
 import { AttributionState, getAttributionRecord, getAttributionSummary } from "@/lib/verified-influence";
 import { cn } from "@/lib/utils";
 import { CommissionStatusChip } from "@/components/commission-status-chip";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from "@heroui/react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TABLE_PAGE_SIZE, useLazyTable } from "@/lib/use-lazy-table";
 
 const stateOrder: AttributionState[] = ["verified", "disputed", "unestablished"];
@@ -18,37 +18,28 @@ const stateMeta: Record<
   AttributionState,
   {
     label: string;
-    chipClassName: string;
-    rowClassName: string;
+    tone: "success" | "warning" | "default";
   }
 > = {
   verified: {
     label: "Verified",
-    chipClassName: "border-[#0f6d45] bg-[#d9f7e8] text-[#0f6d45]",
-    rowClassName: ""
+    tone: "success"
   },
   disputed: {
     label: "Disputed",
-    chipClassName: "border-[#9a4d00] bg-[#ffe8c9] text-[#7a3e00]",
-    rowClassName: "bg-[#fff7eb] hover:bg-[#ffefd6]"
+    tone: "warning"
   },
   unestablished: {
     label: "Unestablished",
-    chipClassName: "border-[#66717d] bg-[#eef2f5] text-[#55606c]",
-    rowClassName: "bg-[#fafbfc] hover:bg-[#f1f4f6]"
+    tone: "default"
   }
 };
 
 function StateChip({ state }: { state: AttributionState }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.72px]",
-        stateMeta[state].chipClassName
-      )}
-    >
+    <Chip color={stateMeta[state].tone} variant="soft" size="sm">
       {stateMeta[state].label}
-    </span>
+    </Chip>
   );
 }
 
@@ -108,115 +99,100 @@ export function CommissionQueue({
   const listHeading = programFilter === "all" ? "Brand commissions by attribution state" : "Programme commissions by attribution state";
 
   return (
-    <div className={showHeader ? "space-y-8" : "space-y-7"}>
-      <section className={showHeader ? "" : showReliabilityEyebrow ? "border-t border-black/20 pt-[30px]" : ""}>
-        {showReliabilityEyebrow && (
-          <div className="px-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.78px] text-[#04070f]/54">
-              {programFilter === "all" ? "Brand Attribution Reliability" : "Programme Attribution Reliability"}
+    <div className={showHeader ? "space-y-6" : "space-y-5"}>
+      <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <CardContent className="space-y-5 p-5 sm:p-6">
+          {showReliabilityEyebrow && (
+            <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">
+              {programFilter === "all" ? "Brand attribution reliability" : "Programme attribution reliability"}
             </p>
+          )}
+          <div className="grid gap-4 md:grid-cols-3">
+            <SummaryCard
+              label="Verified influence"
+              percent={totalConversions > 0 ? Math.round((summary.verified.conversions / totalConversions) * 100) : 0}
+              conversions={summary.verified.conversions}
+              revenue={summary.verified.revenue}
+              commission={summary.verified.commission}
+              state="verified"
+            />
+            <SummaryCard
+              label="Disputed influence"
+              percent={totalConversions > 0 ? Math.round((summary.disputed.conversions / totalConversions) * 100) : 0}
+              conversions={summary.disputed.conversions}
+              revenue={summary.disputed.revenue}
+              commission={summary.disputed.commission}
+              state="disputed"
+            />
+            <SummaryCard
+              label="Unestablished influence"
+              percent={totalConversions > 0 ? Math.round((summary.unestablished.conversions / totalConversions) * 100) : 0}
+              conversions={summary.unestablished.conversions}
+              revenue={summary.unestablished.revenue}
+              commission={summary.unestablished.commission}
+              state="unestablished"
+            />
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        <div className={`grid gap-4 px-2 pb-[30px] md:grid-cols-3 ${showReliabilityEyebrow ? "pt-5" : "pt-0"}`}>
-          <SummaryCard
-            label="Verified Influence"
-            percent={totalConversions > 0 ? Math.round((summary.verified.conversions / totalConversions) * 100) : 0}
-            conversions={summary.verified.conversions}
-            revenue={summary.verified.revenue}
-            commission={summary.verified.commission}
-            state="verified"
-          />
-          <SummaryCard
-            label="Disputed Influence"
-            percent={totalConversions > 0 ? Math.round((summary.disputed.conversions / totalConversions) * 100) : 0}
-            conversions={summary.disputed.conversions}
-            revenue={summary.disputed.revenue}
-            commission={summary.disputed.commission}
-            state="disputed"
-          />
-          <SummaryCard
-            label="Unestablished Influence"
-            percent={totalConversions > 0 ? Math.round((summary.unestablished.conversions / totalConversions) * 100) : 0}
-            conversions={summary.unestablished.conversions}
-            revenue={summary.unestablished.revenue}
-            commission={summary.unestablished.commission}
-            state="unestablished"
-          />
-        </div>
-      </section>
-
-      <section className="border-t border-black/20 pt-[26px]">
-        {showRecordsIntro && (
-          <div className="flex flex-col gap-5 px-2 lg:flex-row lg:items-start lg:justify-between">
+      <Card variant="secondary" className="border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <CardHeader className="gap-4 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+          {showRecordsIntro && (
             <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.78px] text-[#04070f]/54">
-                Influence Records
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">
+                Influence records
               </p>
-              <h2 className="text-[28px] font-semibold leading-none tracking-[-1.12px] text-[#04070f]">
-                {listHeading}
-              </h2>
-            </div>
-            <div className="flex w-full max-w-[410px] flex-col gap-3">
-              <p className="text-[15px] leading-6 text-[#04070f]/68">
+              <CardTitle className="text-2xl tracking-[-0.04em]">{listHeading}</CardTitle>
+              <CardDescription className="max-w-2xl text-default-500">
                 Each row is a conversion claim with attributed creator influence. Open a commission to inspect supporting evidence, disputed signals, and review context.
-              </p>
-              <div className="text-[12px] leading-[18px] text-[#04070f]/64">
-                {totalConversions} conversions • {formatCurrency(totalCommission, "USD")} commission value
-              </div>
+              </CardDescription>
+            </div>
+          )}
+          <div className="space-y-3 sm:max-w-sm sm:text-right">
+            <div className="text-sm text-default-500">
+              {totalConversions} conversions
+            </div>
+            <div className="text-base font-medium text-foreground">
+              {formatCurrency(totalCommission, "USD")} commission value
             </div>
           </div>
-        )}
+        </CardHeader>
 
-        <div className={`space-y-4 px-2 pb-2 ${showRecordsIntro ? "pt-5" : "pt-0"}`}>
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CommissionTab)}>
-            <TabsList className="h-auto flex-wrap gap-2 rounded-[16px] bg-transparent p-0">
-              <TabsTrigger
-                value="all"
-                className="rounded-[11px] border-2 border-black bg-[var(--muted)] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-[#04070f] shadow-[2px_2px_0px_0px_black] transition active:translate-x-[1px] active:translate-y-[1px]"
-                activeClassName="rounded-[11px] border-2 border-black bg-[#04070f] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-white shadow-[2px_2px_0px_0px_black]"
-                inactiveClassName="hover:bg-[#c8f4ff]"
-              >
-                All Commissions
-                <span className="ml-2 text-[12px] opacity-72">{records.length}</span>
-              </TabsTrigger>
-              {stateOrder.map((state) => (
-                <TabsTrigger
-                  key={state}
-                  value={state}
-                  className="rounded-[11px] border-2 border-black bg-[var(--muted)] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-[#04070f] shadow-[2px_2px_0px_0px_black] transition active:translate-x-[1px] active:translate-y-[1px]"
-                  activeClassName="rounded-[11px] border-2 border-black bg-[#04070f] px-4 py-2.5 text-[13px] font-semibold tracking-[-0.2px] text-white shadow-[2px_2px_0px_0px_black]"
-                  inactiveClassName="hover:bg-[#c8f4ff]"
-                >
-                  {state === "verified" ? "Verified" : state === "disputed" ? "Disputed" : "Un-established"}
-                  <span className="ml-2 text-[12px] opacity-72">{summary[state].conversions}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+        <CardContent className="space-y-5 p-5 pt-0 sm:p-6">
+          <div className="flex flex-wrap gap-2 rounded-2xl border border-default-200 bg-background/80 p-1">
+            <TabPill active={activeTab === "all"} onClick={() => setActiveTab("all")}>
+              All commissions <span className="text-xs text-default-400">{records.length}</span>
+            </TabPill>
+            {stateOrder.map((state) => (
+              <TabPill key={state} active={activeTab === state} onClick={() => setActiveTab(state)}>
+                {stateMeta[state].label} <span className="text-xs text-default-400">{summary[state].conversions}</span>
+              </TabPill>
+            ))}
+          </div>
 
           {showOverallSummaryLine && (
-            <p className="pt-8 text-[21px] font-semibold leading-none tracking-[-0.84px] text-[#04070f] sm:text-[24px]">
+            <p className="text-sm text-default-500">
               {activeSummary.conversions} conversions · {formatCurrency(activeSummary.revenue, "USD")} revenue · {formatCurrency(activeSummary.commission, "USD")} commission
             </p>
           )}
 
           {showFilteredSummaryCard && (
-            <div className="flex flex-col gap-2 rounded-[16px] border border-black/12 bg-[#f7fafc] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 rounded-2xl border border-default-200 bg-default-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[14px] font-semibold text-[#04070f]">{activeSummary.label}</p>
-                <p className="text-[12px] text-[#04070f]/64">{filteredRecords.length} records shown</p>
+                <p className="text-sm font-medium text-foreground">{activeSummary.label}</p>
+                <p className="text-xs text-default-500">{filteredRecords.length} records shown</p>
               </div>
-              <div className="text-[12px] text-[#04070f]/64 sm:text-right">
-                {activeSummary.conversions} conversions • {formatCurrency(activeSummary.revenue, "USD")} revenue •{" "}
+              <div className="text-xs text-default-500 sm:text-right">
+                {activeSummary.conversions} conversions · {formatCurrency(activeSummary.revenue, "USD")} revenue ·{" "}
                 {formatCurrency(activeSummary.commission, "USD")} commission
               </div>
             </div>
           )}
 
-          <div className="overflow-hidden rounded-[18px] border-2 border-black bg-white shadow-[3px_3px_0px_0px_black]">
+          <div className="overflow-hidden rounded-3xl border border-default-200 bg-background/95">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-default-50">
                 <TableRow className="hover:bg-transparent">
                   <TableHead>{idColumnLabel}</TableHead>
                   <TableHead>Creator</TableHead>
@@ -231,14 +207,14 @@ export function CommissionQueue({
                 {visibleRecords.map((record) => (
                   <TableRow
                     key={record.commissionId}
-                    className={cn("group cursor-pointer align-top", stateMeta[record.state].rowClassName)}
+                    className="group cursor-pointer align-top hover:bg-default-50/70"
                     onClick={() => onOpenCommission(record.commissionId)}
                   >
-                    <TableCell className="font-mono text-[12px] font-semibold text-[#04070f]/72">{record.commissionId}</TableCell>
-                    <TableCell className="font-semibold">{record.creator}</TableCell>
-                    <TableCell className="font-medium">{record.commission}</TableCell>
-                    <TableCell className="max-w-[210px] text-[#04070f]/78">{record.product}</TableCell>
-                    <TableCell className="font-medium">{record.orderValue}</TableCell>
+                    <TableCell className="font-mono text-xs font-medium text-default-500">{record.commissionId}</TableCell>
+                    <TableCell className="font-medium text-foreground">{record.creator}</TableCell>
+                    <TableCell className="font-medium text-foreground">{record.commission}</TableCell>
+                    <TableCell className="max-w-[210px] text-default-500">{record.product}</TableCell>
+                    <TableCell className="font-medium text-foreground">{record.orderValue}</TableCell>
                     <TableCell>
                       <CommissionStatusChip
                         status={rowsById.get(record.commissionId)?.status ?? "recorded"}
@@ -266,7 +242,7 @@ export function CommissionQueue({
                     <TableCell colSpan={7} className="px-4 py-4">
                       <div className="flex flex-col items-center gap-3">
                         <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />
-                        <Button type="button" variant="outline" onClick={loadMore}>
+                        <Button type="button" variant="secondary" onClick={loadMore}>
                           Load 20 more commissions
                         </Button>
                       </div>
@@ -275,7 +251,7 @@ export function CommissionQueue({
                 )}
                 {filteredRecords.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="px-6 py-10 text-center text-sm text-[#04070f]/56">
+                    <TableCell colSpan={7} className="px-6 py-10 text-center text-sm text-default-500">
                       No commissions match this attribution and status combination yet.
                     </TableCell>
                   </TableRow>
@@ -284,12 +260,12 @@ export function CommissionQueue({
             </Table>
           </div>
           {filteredRecords.length > TABLE_PAGE_SIZE && (
-            <p className="px-1 text-[12px] leading-[18px] text-[#04070f]/56">
+            <p className="px-1 text-xs text-default-500">
               Showing {visibleRecords.length} of {filteredRecords.length} commissions
             </p>
           )}
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -310,44 +286,58 @@ function SummaryCard({
   state: AttributionState;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-[18px] border-2 p-5 shadow-[3px_3px_0px_0px_black]",
-        state === "verified"
-          ? "border-[#0f6d45] bg-[#effcf4]"
-          : state === "disputed"
-            ? "border-[#9a4d00] bg-[#fff5e7]"
-            : "border-[#73808c] bg-[#f6f8fa]"
-      )}
-    >
+    <div className={cn("rounded-2xl border p-4 shadow-sm", state === "verified" ? "border-emerald-200 bg-emerald-50/70" : state === "disputed" ? "border-amber-200 bg-amber-50/70" : "border-slate-200 bg-slate-50/70")}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/52">{label}</p>
-          <p className="mt-3 text-[42px] font-semibold leading-none tracking-[-1.68px] text-[#04070f]">{percent}%</p>
-          <p className="mt-1 text-[13px] text-[#04070f]/64">
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-default-500">{label}</p>
+          <p className="mt-3 text-4xl font-semibold leading-none tracking-[-0.05em] text-foreground">{percent}%</p>
+          <p className="mt-1 text-xs text-default-500">
             {conversions} {conversions === 1 ? "conversion" : "conversions"}
           </p>
         </div>
-        <div className="grid h-[34px] w-[34px] place-items-center rounded-full border border-black bg-white/75">
+        <div className="grid h-9 w-9 place-items-center rounded-full border border-default-200 bg-white">
           {state === "verified" ? (
-            <ShieldCheck className="h-4 w-4 text-[#55606c]" />
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
           ) : state === "disputed" ? (
-            <AlertTriangle className="h-4 w-4 text-[#55606c]" />
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
           ) : (
-            <CircleDashed className="h-4 w-4 text-[#55606c]" />
+            <CircleDashed className="h-4 w-4 text-slate-500" />
           )}
         </div>
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-3 border-t border-black/12 pt-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 border-t border-default-200 pt-4">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/50">Revenue</p>
-          <p className="mt-1 text-[18px] font-semibold text-[#04070f]">{formatCurrency(revenue, "USD")}</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-default-500">Revenue</p>
+          <p className="mt-1 text-base font-semibold text-foreground">{formatCurrency(revenue, "USD")}</p>
         </div>
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/50">Commission</p>
-          <p className="mt-1 text-[18px] font-semibold text-[#04070f]">{formatCurrency(commission, "USD")}</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-default-500">Commission</p>
+          <p className="mt-1 text-base font-semibold text-foreground">{formatCurrency(commission, "USD")}</p>
         </div>
       </div>
     </div>
+  );
+}
+
+function TabPill({
+  active,
+  onClick,
+  children
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition",
+        active ? "bg-white text-foreground shadow-sm" : "text-default-500 hover:bg-default-100 hover:text-foreground"
+      )}
+    >
+      {children}
+    </button>
   );
 }

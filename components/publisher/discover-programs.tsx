@@ -1,6 +1,7 @@
 "use client";
 
-import { ProgramCard } from "@/components/program-card";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Chip, Separator } from "@heroui/react";
 
 const DISCOVER = [
   {
@@ -67,30 +68,63 @@ const DISCOVER = [
 
 export function DiscoverPrograms({ onOpenProgram }: { onOpenProgram: (name: string) => void }) {
   return (
-    <div className="grid items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {DISCOVER.map((p) => (
-        <ProgramCard
-          key={p.programName}
-          className="h-[410px] max-h-[410px]"
-          brandName={p.brand}
-          status="Open"
-          badgeLabel={p.category}
-          programName={p.programName}
-          intro={p.intro}
-          primaryMetrics={[
-            { label: "Commission Rate", value: p.rate },
-            { label: "Cookie Window", value: p.cookie }
-          ]}
-          stats={[
-            { label: "Attribution", value: p.attribution },
-            { label: "Validation", value: p.validation },
-            { label: "Payouts", value: "Monthly" },
-            { label: "Status", value: "Open" }
-          ]}
-          ctaLabel="Review Program"
-          onOpen={() => onOpenProgram(p.programName)}
-        />
-      ))}
+    <div className="space-y-6">
+      <Card className="border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-2">
+            <Chip color="accent" variant="soft" size="sm">Discover</Chip>
+            <div>
+              <h1 className="text-4xl font-semibold tracking-[-0.05em] text-foreground sm:text-5xl">Explore programs</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-default-500 sm:text-base">
+                Browse open partnerships with a softer marketplace layout and clear governance details.
+              </p>
+            </div>
+          </div>
+          <Button variant="secondary">
+            Browse all
+            <Sparkles className="h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
+
+      <div className="grid items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {DISCOVER.map((p) => (
+          <Card key={p.programName} className="border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardHeader className="gap-3 p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">{p.brand}</p>
+                  <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">{p.programName}</CardTitle>
+                </div>
+                <Chip color="accent" variant="soft" size="sm">{p.category}</Chip>
+              </div>
+              <CardDescription className="text-sm leading-6 text-default-500">{p.intro}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 px-5 pb-5 pt-0">
+              <div className="grid grid-cols-2 gap-3">
+                <Fact label="Commission" value={p.rate} />
+                <Fact label="Cookie window" value={p.cookie} />
+                <Fact label="Attribution" value={p.attribution} />
+                <Fact label="Validation" value={p.validation} />
+              </div>
+              <Separator />
+              <Button fullWidth onClick={() => onOpenProgram(p.programName)}>
+                Review Program
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-default-200 bg-default-50/70 p-3">
+      <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">{label}</p>
+      <p className="mt-2 text-sm font-medium text-foreground">{value}</p>
     </div>
   );
 }

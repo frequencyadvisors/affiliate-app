@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PlusCircle } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { COMMISSIONS, DISPUTES } from "@/lib/mock-data";
-import { ProgramCard } from "@/components/program-card";
-import { ListSurface } from "@/components/ui/list-surface";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Chip, Separator } from "@heroui/react";
 
 type ProgramViewMode = "grid" | "list";
 const CREATOR_PROGRAM_VIEW_KEY = "freeq:creator:program-view-mode";
@@ -50,6 +48,7 @@ export function MyPrograms({ onOpenProgram, onDiscover }: { onOpenProgram: (prog
     setViewMode(mode);
     window.localStorage.setItem(CREATOR_PROGRAM_VIEW_KEY, mode);
   }
+
   const summaries: Record<string, string> = {
     "Chocolate Bar Drop Vol. 3": "Limited-run chocolate bar collection including new MrBeast Bar flavors. High conversion, impulse-buy price point.",
     "Creator Collab Series": "Affiliate program for creator-native partnerships driving Feastables multipack and bundle sales across YouTube and TikTok audiences.",
@@ -71,129 +70,175 @@ export function MyPrograms({ onOpenProgram, onDiscover }: { onOpenProgram: (prog
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-60px)] w-full flex-col">
-      <div className="mx-auto w-full max-w-[1180px] flex-1 px-8 py-8">
-        <div className="flex h-[79.773px] w-full flex-col gap-2">
-          <div className="flex h-[50px] items-center justify-between gap-4">
-            <h1 className="font-[var(--font-jost)] text-[50px] font-semibold leading-[24px] tracking-[-0.2px] text-[#04070f]">My Programs</h1>
-            <div className="inline-flex items-center rounded-[10px] border-2 border-black bg-black p-1">
-              <button
-                type="button"
-                onClick={() => setProgramViewMode("grid")}
-                className={[
-                  "rounded-[8px] px-3 py-1 text-[14px] font-semibold",
-                  viewMode === "grid" ? "bg-white text-[#04070f]" : "text-white/80 hover:text-white"
-                ].join(" ")}
-              >
-                Grid View
-              </button>
-              <button
-                type="button"
-                onClick={() => setProgramViewMode("list")}
-                className={[
-                  "rounded-[8px] px-3 py-1 text-[14px] font-semibold",
-                  viewMode === "list" ? "bg-white text-[#04070f]" : "text-white/80 hover:text-white"
-                ].join(" ")}
-              >
-                List View
-              </button>
+    <div className="space-y-6">
+      <Card className="border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <Chip color="accent" variant="soft" size="sm">Creator workspace</Chip>
+            <div className="space-y-2">
+              <h1 className="text-4xl font-semibold tracking-[-0.05em] text-foreground sm:text-5xl">My Programs</h1>
+              <p className="max-w-2xl text-sm leading-6 text-default-500 sm:text-base">
+                Review your active partnerships, performance, and program health.
+              </p>
             </div>
           </div>
-          <p className="text-[16px] text-muted-foreground">Review your active partnerships, performance, and program health.</p>
-        </div>
 
-        {viewMode === "grid" ? (
-          <div className="mt-[35px] grid items-start gap-4 lg:grid-cols-3">
-            {rows.map((r: any) => (
-              <ProgramCard
-                key={r.programName}
-                brandName={r.brand}
-                status={r.status}
-                programName={r.programName}
-                description={summaries[r.programName] || "Performance-ready affiliate program with transparent governance and reliable payout behavior."}
-                primaryMetrics={[
-                  { label: "Earnings this month", value: creatorCardMetrics[r.programName]?.primary[0] || "$0" },
-                  { label: "pending approval", value: creatorCardMetrics[r.programName]?.primary[1] || "$0" }
-                ]}
-                stats={[
-                  { label: "Approved", value: creatorCardMetrics[r.programName]?.secondary[0] || "$0" },
-                  { label: "Earnings/Order", value: creatorCardMetrics[r.programName]?.secondary[1] || "$0.00" },
-                  { label: "Orders Driven", value: creatorCardMetrics[r.programName]?.secondary[2] || "0" },
-                  { label: "Sales Generated", value: creatorCardMetrics[r.programName]?.secondary[3] || "$0" }
-                ]}
-                onOpen={() => onOpenProgram(r.programName)}
-              />
-            ))}
+          <div className="flex rounded-2xl border border-default-200 bg-default-50 p-1 shadow-sm">
+            <ViewToggle active={viewMode === "grid"} onClick={() => setProgramViewMode("grid")}>
+              Grid View
+            </ViewToggle>
+            <ViewToggle active={viewMode === "list"} onClick={() => setProgramViewMode("list")}>
+              List View
+            </ViewToggle>
           </div>
-        ) : (
-          <ListSurface className="mt-[35px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Programme</TableHead>
-                  <TableHead>Brand</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Earnings</TableHead>
-                  <TableHead>Pending</TableHead>
-                  <TableHead>Approved</TableHead>
-                  <TableHead>Sales</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((r: any) => (
-                  <TableRow key={r.programName} className="cursor-pointer" onClick={() => onOpenProgram(r.programName)}>
-                    <TableCell className="font-semibold">{r.programName}</TableCell>
-                    <TableCell>{r.brand}</TableCell>
-                    <TableCell>{r.status}</TableCell>
-                    <TableCell>{creatorCardMetrics[r.programName]?.primary[0] || "$0"}</TableCell>
-                    <TableCell>{creatorCardMetrics[r.programName]?.primary[1] || "$0"}</TableCell>
-                    <TableCell>{creatorCardMetrics[r.programName]?.secondary[0] || "$0"}</TableCell>
-                    <TableCell>{creatorCardMetrics[r.programName]?.secondary[3] || "$0"}</TableCell>
-                    <TableCell className="text-right">
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onOpenProgram(r.programName);
-                        }}
-                        className="rounded-[8px] border border-black px-3 py-1 text-[13px] font-semibold hover:bg-[rgba(55,220,255,0.2)]"
-                      >
-                        View
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ListSurface>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="mt-auto h-[138px] w-full border-t-2 border-black bg-[var(--lime)]">
-        <div className="mx-auto flex h-full w-full max-w-[1180px] items-center justify-between px-8 pt-[2px]">
-          <span className="flex h-[50.391px] items-center gap-4">
-            <span className="flex h-[50px] w-[50px] items-center justify-center rounded-[14px] border-[3px] border-black bg-primary shadow-[3px_3px_0px_0px_black]">
-              <PlusCircle className="h-6 w-6" />
-            </span>
-            <span className="text-left">
-              <span className="block text-[26.4px] font-semibold leading-[26.4px] tracking-[-0.88px] text-[#04070f]">
-                Looking for new partnerships?
-              </span>
-              <span className="text-[16px] leading-[24px] text-muted-foreground">
-                Discover programs with transparent governance metrics.
-              </span>
-            </span>
-          </span>
-          <button
-            className="flex h-[44px] items-center justify-center gap-2 rounded-[11px] border-2 border-black bg-primary px-6 text-[20px] font-semibold leading-[30px] tracking-[-0.2px] text-[#04070f] shadow-[4px_4px_0px_0px_black] hover:brightness-105"
-            onClick={onDiscover}
-          >
-            Discover Programs
-            <span aria-hidden className="relative top-[-0.5px]">›</span>
-          </button>
+      {viewMode === "grid" ? (
+        <div className="grid gap-4 lg:grid-cols-3">
+          {rows.map((r: any) => (
+            <ProgramSurfaceCard
+              key={r.programName}
+              brandName={r.brand}
+              status={r.status}
+              programName={r.programName}
+              description={summaries[r.programName] || "Performance-ready affiliate program with transparent governance and reliable payout behavior."}
+              primaryMetrics={[
+                { label: "Earnings this month", value: creatorCardMetrics[r.programName]?.primary[0] || "$0" },
+                { label: "Pending approval", value: creatorCardMetrics[r.programName]?.primary[1] || "$0" }
+              ]}
+              stats={[
+                { label: "Approved", value: creatorCardMetrics[r.programName]?.secondary[0] || "$0" },
+                { label: "Earnings/Order", value: creatorCardMetrics[r.programName]?.secondary[1] || "$0.00" },
+                { label: "Orders Driven", value: creatorCardMetrics[r.programName]?.secondary[2] || "0" },
+                { label: "Sales Generated", value: creatorCardMetrics[r.programName]?.secondary[3] || "$0" }
+              ]}
+              onOpen={() => onOpenProgram(r.programName)}
+            />
+          ))}
         </div>
-      </div>
+      ) : (
+        <Card className="border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <CardHeader className="gap-2 px-6 pt-6">
+            <CardTitle className="text-xl tracking-[-0.03em]">Programs list</CardTitle>
+            <CardDescription className="text-default-500">Compact view of your creator partnerships.</CardDescription>
+          </CardHeader>
+          <CardContent className="px-6 pb-6 pt-0">
+            <Separator />
+            <div className="mt-4 space-y-3">
+              {rows.map((r: any) => (
+                <button
+                  key={r.programName}
+                  type="button"
+                  onClick={() => onOpenProgram(r.programName)}
+                  className="group flex w-full items-center justify-between gap-4 rounded-3xl border border-default-200 bg-background/90 px-4 py-4 text-left transition-colors hover:bg-default-50/80"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-base font-semibold tracking-[-0.02em] text-foreground">{r.programName}</p>
+                      <Chip variant="soft" color="accent" size="sm">{r.status}</Chip>
+                    </div>
+                    <p className="mt-1 text-sm text-default-500">{r.brand}</p>
+                  </div>
+                  <div className="hidden text-right sm:block">
+                    <p className="text-xs uppercase tracking-[0.22em] text-default-400">Earnings</p>
+                    <p className="mt-1 text-sm font-medium text-foreground">{creatorCardMetrics[r.programName]?.primary[0] || "$0"}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-default-300 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="border border-white/70 bg-gradient-to-r from-[rgba(168,85,247,0.12)] to-[rgba(255,255,255,0.9)] shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">Discover more</p>
+            <p className="text-xl font-semibold tracking-[-0.03em] text-foreground">Looking for new partnerships?</p>
+            <p className="text-sm text-default-500">Discover programs with transparent governance metrics.</p>
+          </div>
+          <Button variant="primary" onClick={onDiscover}>
+            Discover Programs
+            <Sparkles className="h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+function ViewToggle({ active, onClick, children }: { active: boolean; onClick: () => void; children: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "rounded-xl px-4 py-2 text-sm font-medium transition",
+        active ? "bg-white text-foreground shadow-sm" : "text-default-500 hover:text-foreground"
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ProgramSurfaceCard({
+  brandName,
+  status,
+  programName,
+  description,
+  primaryMetrics,
+  stats,
+  onOpen
+}: {
+  brandName: string;
+  status: string;
+  programName: string;
+  description: string;
+  primaryMetrics: { label: string; value: string }[];
+  stats: { label: string; value: string }[];
+  onOpen: () => void;
+}) {
+  return (
+    <Card className="border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <CardHeader className="gap-3 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">{brandName}</p>
+            <CardTitle className="mt-2 text-2xl tracking-[-0.04em]">{programName}</CardTitle>
+          </div>
+          <Chip color="accent" variant="soft" size="sm">{status}</Chip>
+        </div>
+        <CardDescription className="text-sm leading-6 text-default-500">{description}</CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-4 px-5 pb-5 pt-0">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {primaryMetrics.map((metric) => (
+            <div key={metric.label} className="rounded-2xl border border-default-200 bg-default-50/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">{metric.label}</p>
+              <p className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-foreground">{metric.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <Separator />
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          {stats.map((stat) => (
+            <div key={stat.label} className="rounded-2xl border border-default-200 bg-white/80 p-3">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">{stat.label}</p>
+              <p className="mt-2 text-sm font-medium text-foreground">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <Button fullWidth variant="secondary" onClick={onOpen}>
+          Open Program
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

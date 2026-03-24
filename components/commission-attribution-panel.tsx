@@ -13,8 +13,7 @@ import {
   Sparkles,
   TriangleAlert
 } from "lucide-react";
-import { CommissionStatusChip } from "@/components/commission-status-chip";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Chip, Separator } from "@heroui/react";
 import { cn } from "@/lib/utils";
 import { Commission } from "@/lib/mock-data";
 import { AttributionRecord, AttributionTimelineEvent, getAttributionTimeline } from "@/lib/verified-influence";
@@ -33,6 +32,35 @@ const timelineIconMap = {
   reverse: RotateCcw
 } as const;
 
+function getStatusTone(status: Commission["status"]) {
+  switch (status) {
+    case "approved":
+    case "paid":
+      return "success";
+    case "pending":
+      return "warning";
+    case "reversed":
+      return "danger";
+    case "locked":
+      return "default";
+    default:
+      return "accent";
+  }
+}
+
+function getJourneyTone(stage: Commission["journeyStage"]) {
+  switch (stage) {
+    case "link_clicked":
+    case "product_viewed":
+      return "accent";
+    case "added_to_cart":
+    case "checkout_started":
+      return "warning";
+    default:
+      return "default";
+  }
+}
+
 export function CommissionAttributionPanel({
   commission,
   attribution,
@@ -43,22 +71,46 @@ export function CommissionAttributionPanel({
   statusMessage?: string;
 }) {
   const timelineItems = getAttributionTimeline(commission, attribution);
+  const statusTone = getStatusTone(commission.status);
+  const journeyTone = getJourneyTone(commission.journeyStage);
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-0">
-        <div className="flex items-start justify-between gap-4 px-5 py-5">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <h1 className="text-[22px] font-semibold leading-[22px] tracking-[-0.66px] text-[#04070f]">{commission.id}</h1>
-              <CommissionStatusChip status={commission.status} journeyStage={commission.journeyStage} />
+    <Card
+      variant="secondary"
+      className="overflow-hidden border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,40,0.08)] backdrop-blur-xl"
+    >
+      <CardHeader className="gap-4 p-6 sm:p-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Chip color={statusTone} variant="soft" size="sm">
+                {commission.status}
+              </Chip>
+              <Chip color={journeyTone} variant="secondary" size="sm">
+                {commission.journeyStage.replace(/_/g, " ")}
+              </Chip>
+              <Chip color="default" variant="secondary" size="sm">
+                {commission.id}
+              </Chip>
             </div>
-            {statusMessage ? <p className="text-[12px] leading-4 text-[#ff6088]">{statusMessage}</p> : null}
+            <div className="space-y-1">
+              <CardTitle className="text-2xl tracking-[-0.04em] text-foreground">{commission.id}</CardTitle>
+              <CardDescription className="max-w-2xl text-default-500">
+                {statusMessage || attribution.systemConfidence}
+              </CardDescription>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:min-w-56 sm:grid-cols-2">
+            <MetaPill label="State" value={attribution.state} tone="accent" />
+            <MetaPill label="Signals" value={String(attribution.signals.length)} tone="default" />
           </div>
         </div>
+      </CardHeader>
 
-        <div className="px-[30px] pb-[70px] pt-[40px]">
-          <div className="mx-auto flex max-w-[694px] flex-col">
+      <CardContent className="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
+        <div className="rounded-3xl border border-default-200 bg-background/85 p-5 shadow-[0_10px_30px_rgba(15,23,40,0.04)]">
+          <div className="mx-auto flex max-w-3xl flex-col gap-4">
             {timelineItems.map((item, index) => {
               const nextItem = timelineItems[index + 1];
               const isExpected = item.progression === "expected";
@@ -77,41 +129,59 @@ export function CommissionAttributionPanel({
         </div>
 
         {attribution.conflictingSignal ? (
-          <div className="px-5 pb-5">
-            <div className="rounded-[14px] bg-[#fff0d9] px-[18px] py-[18px]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#7a3e00]">Why this is contested</p>
-              <p className="mt-2 text-[14px] leading-6 text-[#6d3900]">{attribution.conflictingSignal}</p>
-            </div>
-          </div>
+          <Card variant="secondary" className="border border-warning/20 bg-warning/10 shadow-none">
+            <CardContent className="p-4 sm:p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-warning">Why this is contested</p>
+              <p className="mt-2 text-sm leading-6 text-foreground/80">{attribution.conflictingSignal}</p>
+            </CardContent>
+          </Card>
         ) : attribution.systemNote ? (
-          <div className="px-5 pb-5">
-            <div className="rounded-[14px] border border-black/10 bg-[#f7f9fb] px-[18px] py-[18px]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#525c63]">System Note</p>
-              <p className="mt-2 text-[14px] leading-6 text-[#04070f]/78">{attribution.systemNote}</p>
-            </div>
-          </div>
+          <Card variant="secondary" className="border border-default-200 bg-default-50/80 shadow-none">
+            <CardContent className="p-4 sm:p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">System note</p>
+              <p className="mt-2 text-sm leading-6 text-default-600">{attribution.systemNote}</p>
+            </CardContent>
+          </Card>
         ) : null}
 
-        <div className="grid border-t border-black/10 lg:grid-cols-2">
-          <div className="border-r border-black/10 px-[30px] py-[30px]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/52">Confidence explanation</p>
-            <p className="mt-3 text-[14px] font-semibold leading-6 text-[#04070f]">{attribution.integritySummary}</p>
-            <p className="mt-1 text-[13px] leading-5 text-[#525c63]">{attribution.integrityDescription}</p>
-            <ul className="mt-3 space-y-2">
-              {attribution.signals.map((signal) => (
-                <li key={signal.label} className="flex gap-2 text-[14px] leading-6 text-[#04070f]">
-                  <span className="font-semibold">
-                    {signal.status === "positive" ? "✓" : signal.status === "warning" ? "⚠" : "✗"}
-                  </span>
-                  <span>{signal.label}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="px-[30px] py-[30px]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.72px] text-[#04070f]/52">What this means for you</p>
-            <p className="mt-3 max-w-[260px] text-[14px] leading-6 text-[#04070f]/78">{attribution.systemConfidence}</p>
-          </div>
+        <Separator />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card variant="secondary" className="border border-default-200 bg-default-50/80 shadow-none">
+            <CardContent className="p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">Confidence explanation</p>
+              <p className="mt-3 text-base font-semibold leading-6 text-foreground">{attribution.integritySummary}</p>
+              <p className="mt-2 text-sm leading-6 text-default-600">{attribution.integrityDescription}</p>
+              <div className="mt-4 space-y-2">
+                {attribution.signals.map((signal) => (
+                  <div key={signal.label} className="flex items-start gap-3 rounded-2xl border border-default-200 bg-background/90 px-3 py-2">
+                    <span
+                      className={cn(
+                        "mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                        signal.status === "positive"
+                          ? "bg-success/15 text-success"
+                          : signal.status === "warning"
+                            ? "bg-warning/15 text-warning"
+                            : "bg-danger/15 text-danger"
+                      )}
+                    >
+                      {signal.status === "positive" ? "✓" : signal.status === "warning" ? "!" : "×"}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">{signal.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card variant="secondary" className="border border-default-200 bg-background/80 shadow-none">
+            <CardContent className="p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-default-500">What this means for you</p>
+              <p className="mt-3 max-w-md text-sm leading-6 text-default-600">{attribution.systemConfidence}</p>
+            </CardContent>
+          </Card>
         </div>
       </CardContent>
     </Card>
@@ -131,50 +201,69 @@ function TimelineRow({
   const isExpected = item.progression === "expected";
 
   return (
-    <div className="relative flex items-center gap-[10px] pt-[10px] first:pt-0">
-      {!isFirst ? <div className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-[rgba(0,0,0,0.2)]" /> : null}
-      <div className="relative top-[-15px] flex w-[70px] shrink-0 justify-center">
+    <div className="relative flex items-stretch gap-4">
+      <div className="relative flex w-12 shrink-0 justify-center">
+        {!isFirst ? <div className="absolute top-0 h-4 w-px bg-default-200" /> : null}
         <div
           className={cn(
-            "relative z-10 flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 shadow-[4px_4px_0px_0px_black]",
+            "relative z-10 flex h-10 w-10 items-center justify-center rounded-full border shadow-sm",
             isExpected
-              ? "bg-[#f5f5f5] text-black/35 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.18)]"
+              ? "border-default-200 bg-default-100 text-default-400"
               : item.tone === "alert"
-                ? "border-black bg-[#ff6088]"
+                ? "border-danger/20 bg-danger/15 text-danger"
                 : item.tone === "success"
-                  ? "border-black bg-[#37dcff]"
+                  ? "border-success/20 bg-success/15 text-success"
                   : item.tone === "review"
-                    ? "border-black bg-[#fff0d9]"
-                    : "border-black bg-white"
+                    ? "border-warning/20 bg-warning/15 text-warning"
+                    : "border-default-200 bg-background text-foreground"
           )}
-          style={isExpected ? { borderColor: "rgba(0, 0, 0, 0.18)" } : undefined}
         >
-          <Icon className={cn("h-[24px] w-[24px]", isExpected ? "text-black/35" : "text-[#04070f]")} strokeWidth={2.25} />
+          <Icon className="h-4 w-4" strokeWidth={2.25} />
         </div>
-        {showConnector ? <div className="absolute left-[calc(50%+2px)] top-[60px] h-[calc(100%+10px)] w-[2px] -translate-x-1/2 bg-black" /> : null}
+        {showConnector ? <div className="absolute top-10 h-[calc(100%+0.5rem)] w-px bg-default-200" /> : null}
       </div>
 
-      <div
+      <Card
+        variant="secondary"
         className={cn(
-          "mb-2 flex min-h-[90px] flex-1 items-center justify-between rounded-[20px] px-[18px] py-[15px]",
-          isExpected ? "bg-transparent" : item.tone === "alert" ? "bg-[rgba(255,96,136,0.1)]" : "bg-white"
+          "flex-1 border shadow-none",
+          isExpected ? "border-default-200 bg-default-50/50" : "border-default-200 bg-background/95"
         )}
       >
-        <div className="min-w-0 flex-1 pr-4">
-          <p className={cn("text-[21px] font-semibold leading-[1.1] tracking-[-0.2px]", isExpected ? "text-[#04070f]/40" : "text-[#04070f]")}>{item.title}</p>
-          <p className={cn("mt-1 text-[12px] leading-4", isExpected ? "text-[#525c63]/55" : item.tone === "alert" ? "text-[#ff6088]" : "text-[#525c63]")}>
-            {item.subtitle}
-          </p>
-          {item.metadataLabel ? (
-            <p className={cn("mt-2 text-[11px] font-semibold uppercase tracking-[0.48px]", isExpected ? "text-[#04070f]/35" : "text-[#04070f]/60")}>
-              {item.metadataLabel}
+        <CardContent className="flex min-h-[88px] items-start justify-between gap-4 p-4 sm:p-5">
+          <div className="min-w-0 flex-1">
+            <p className={cn("text-base font-semibold tracking-[-0.02em]", isExpected ? "text-default-500" : "text-foreground")}>
+              {item.title}
             </p>
-          ) : null}
-        </div>
-        <div className={cn("shrink-0 text-right text-[12px] font-semibold uppercase tracking-[0.72px]", isExpected ? "text-black/30" : "text-black/50")}>
-          {item.timestamp}
-        </div>
-      </div>
+            <p className={cn("mt-1 text-sm leading-6", isExpected ? "text-default-400" : "text-default-600")}>
+              {item.subtitle}
+            </p>
+            {item.metadataLabel ? (
+              <p className="mt-2 text-xs font-medium uppercase tracking-[0.22em] text-default-400">{item.metadataLabel}</p>
+            ) : null}
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-default-400">{item.timestamp}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function MetaPill({
+  label,
+  value,
+  tone
+}: {
+  label: string;
+  value: string;
+  tone: "accent" | "default";
+}) {
+  return (
+    <div className="rounded-2xl border border-default-200 bg-background/90 px-4 py-3">
+      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-default-400">{label}</p>
+      <p className={cn("mt-1 text-sm font-semibold", tone === "accent" ? "text-foreground" : "text-default-600")}>{value}</p>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Building2, Plus, Trash2 } from "lucide-react";
 import { BRAND_PROGRAMS_DATA, BRANDS, BUSINESS_UNITS, COMMISSIONS } from "@/lib/mock-data";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Chip } from "@heroui/react";
 
 type UnitRow = {
   id: string;
@@ -50,18 +51,18 @@ export function BusinessUnitsManager() {
   }
 
   return (
-    <div className="w-full max-w-[860px] space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-[44px] font-semibold leading-[1] tracking-[-0.2px] text-[#04070f]">Businesses</h1>
-        <p className="text-[18px] text-muted-foreground">
+    <Card variant="secondary" className="mx-auto w-full max-w-4xl border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <CardHeader className="gap-2 p-6">
+        <Chip color="accent" variant="soft" size="sm" className="w-fit">Brand structure</Chip>
+        <CardTitle className="text-3xl tracking-[-0.04em]">Businesses</CardTitle>
+        <CardDescription className="text-default-500">
           Organize programmes under businesses tied to your brand.
-        </p>
-      </div>
-
-      <div className="w-full rounded-[20px] border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_black]">
-        <div className="mb-5 flex flex-wrap items-end gap-3 border-b border-black/10 pb-5">
-          <div className="min-w-[260px] flex-1">
-            <label className="mb-2 block text-sm font-semibold text-[#04070f]">Add Business</label>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6 p-6 pt-0">
+        <div className="flex flex-col gap-3 rounded-3xl border border-default-200 bg-default-50/70 p-4 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1">
+            <label className="mb-2 block text-sm font-medium text-foreground">Add business</label>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -69,38 +70,35 @@ export function BusinessUnitsManager() {
                 if (event.key === "Enter") addUnit();
               }}
               placeholder="e.g. New Category Team"
-              className="h-11 w-full rounded-[11px] border border-black/10 bg-[var(--background)] px-3 text-[16px] outline-none focus:ring-2 focus:ring-[#37dcff]"
+              className="h-11 w-full rounded-2xl border border-default-200 bg-white px-4 text-sm text-foreground outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
-          <button
-            onClick={addUnit}
-            className="flex h-11 items-center gap-2 rounded-[11px] border-2 border-black bg-primary px-4 text-[16px] font-semibold text-[#04070f] shadow-[3px_3px_0px_0px_black] hover:brightness-105"
-          >
+          <Button onClick={addUnit} className="sm:w-auto">
             <Plus className="h-4 w-4" />
-            Add Unit
-          </button>
+            Add unit
+          </Button>
         </div>
 
         <div className="space-y-3">
           {units.map((unit) => (
             <div
               key={unit.id}
-              className="flex items-center justify-between rounded-[12px] border border-black/10 bg-[rgba(242,253,255,0.42)] px-4 py-3 transition-colors hover:bg-[rgba(242,253,255,0.82)]"
+              className="flex items-center justify-between rounded-2xl border border-default-200 bg-background/80 px-4 py-4 transition-colors hover:bg-default-50"
             >
               <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-[10px] border border-black/10 bg-white">
+                <span className="grid h-10 w-10 place-items-center rounded-2xl border border-default-200 bg-default-50 text-default-600">
                   <Building2 className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-[17px] font-semibold leading-none text-[#04070f]">{unit.name}</p>
-                  <p className="mt-1 text-[12px] text-muted-foreground">
+                  <p className="text-sm font-medium text-foreground">{unit.name}</p>
+                  <p className="mt-1 text-xs text-default-500">
                     {BRANDS[unit.brandId]?.name || "Brand"} · {counts[unit.id]?.programs || 0} programs · {counts[unit.id]?.commissions || 0} commissions
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => removeUnit(unit.id)}
-                className="flex h-9 items-center gap-2 rounded-[10px] border border-black/10 bg-white px-3 text-[13px] font-medium hover:bg-black/5"
+                className="inline-flex items-center gap-2 rounded-xl border border-default-200 bg-white px-3 py-2 text-sm font-medium text-default-500 transition-colors hover:bg-danger/10 hover:text-danger"
               >
                 <Trash2 className="h-4 w-4" />
                 Remove
@@ -108,7 +106,7 @@ export function BusinessUnitsManager() {
             </div>
           ))}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
